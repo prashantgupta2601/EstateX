@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { fontSans, fontHeading } from "@/lib/fonts";
 import Providers from "@/components/providers";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,7 +38,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans">
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar />
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
