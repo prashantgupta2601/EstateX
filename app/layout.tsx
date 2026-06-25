@@ -5,22 +5,22 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "EstateHub | Premium Real Estate Platform",
-    template: "%s | EstateHub",
+    default: "EstateX | Premium Real Estate Platform",
+    template: "%s | EstateX",
   },
-  description: "Browse, compare, and find your dream home on EstateHub.",
+  description: "Browse, compare, and find your dream home on EstateX.",
   openGraph: {
-    title: "EstateHub | Premium Real Estate Platform",
-    description: "Browse, compare, and find your dream home on EstateHub.",
+    title: "EstateX | Premium Real Estate Platform",
+    description: "Browse, compare, and find your dream home on EstateX.",
     type: "website",
     locale: "en_US",
-    url: "https://estatehub.com",
-    siteName: "EstateHub",
+    url: "https://estatex.com",
+    siteName: "EstateX",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EstateHub | Premium Real Estate Platform",
-    description: "Browse, compare, and find your dream home on EstateHub.",
+    title: "EstateX | Premium Real Estate Platform",
+    description: "Browse, compare, and find your dream home on EstateX.",
   },
 };
 
