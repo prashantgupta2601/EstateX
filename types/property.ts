@@ -47,6 +47,7 @@ export interface Property {
   amenities: Amenity[];
   status: PropertyStatus;
   featured: boolean;
+  isVerified?: boolean;
   createdAt: string; // ISO date string
   agent: Agent;
   yearBuilt?: number;

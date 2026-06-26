@@ -1,11 +1,15 @@
 import React from 'react';
 import Hero from '@/components/home/hero';
+import FeaturedProperties from '@/components/home/featured-properties';
 
 export default function HomePage() {
   return (
     <div className="w-full min-h-screen bg-background">
       {/* Hero Section */}
       <Hero />
+
+      {/* Featured Properties Section */}
+      <FeaturedProperties />
 
       {/* Main content grid (additional sections can be added here) */}
       <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
