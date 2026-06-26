@@ -1,6 +1,7 @@
 import React from 'react';
 import Hero from '@/components/home/hero';
 import FeaturedProperties from '@/components/home/featured-properties';
+import PopularCities from '@/components/home/popular-cities';
 
 export default function HomePage() {
   return (
@@ -10,6 +11,9 @@ export default function HomePage() {
 
       {/* Featured Properties Section */}
       <FeaturedProperties />
+
+      {/* Popular Cities Section */}
+      <PopularCities />
 
       {/* Main content grid (additional sections can be added here) */}
       <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
