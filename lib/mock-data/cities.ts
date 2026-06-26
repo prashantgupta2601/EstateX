@@ -9,7 +9,7 @@ export const mockCities: CityData[] = [
   {
     id: 'city-mumbai',
     name: 'Mumbai',
-    image: 'https://images.unsplash.com/photo-1570168007244-2370413b41d7?w=600&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1529250856085-ad1d2831e17c?w=600&auto=format&fit=crop&q=80',
     propertyCount: 14200,
   },
   {
@@ -33,13 +33,13 @@ export const mockCities: CityData[] = [
   {
     id: 'city-pune',
     name: 'Pune',
-    image: 'https://images.unsplash.com/photo-1601999109332-542b18dbec57?w=600&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=600&auto=format&fit=crop&q=80',
     propertyCount: 8200,
   },
   {
     id: 'city-hyderabad',
     name: 'Hyderabad',
-    image: 'https://images.unsplash.com/photo-1608958416715-db14bb7be1cc?w=600&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1601880340244-78ddc8b66324?w=600&auto=format&fit=crop&q=80',
     propertyCount: 7800,
   },
   {
