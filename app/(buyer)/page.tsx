@@ -1,37 +1,58 @@
 import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import Hero from '@/components/home/hero';
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:py-24 flex flex-col items-center">
-      <div className="mb-6 flex justify-center">
-        <Image 
-          src="/estatex_logo.png" 
-          alt="EstateX Brand Logo" 
-          width={96} 
-          height={96} 
-          className="h-24 w-24 object-contain rounded-2xl shadow-md border border-border bg-card p-2"
-          priority
-        />
-      </div>
-      <h1 className="text-4xl font-bold tracking-tight sm:text-6xl text-primary">
-        Find Your Next Perfect Place to Live
-      </h1>
-      <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-        Discover, view, and compare the best properties in your area. Simple, transparent, and quick.
-      </p>
-      <div className="mt-10 flex items-center justify-center gap-x-6">
-        <Link
-          href="/search"
-          className="rounded-md bg-primary px-3.5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          Browse Properties
-        </Link>
-        <Link href="/compare" className="text-sm font-semibold leading-6 text-foreground hover:underline">
-          Compare Options <span aria-hidden="true">→</span>
-        </Link>
-      </div>
+    <div className="w-full min-h-screen bg-background">
+      {/* Hero Section */}
+      <Hero />
+
+      {/* Main content grid (additional sections can be added here) */}
+      <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto">
+          <h2 className="text-3xl font-extrabold text-foreground sm:text-4xl">
+            Why Choose EstateX?
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            We provide a seamless and secure real estate browsing and transaction experience with premium features.
+          </p>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Card 1 */}
+          <div className="flex flex-col items-center p-6 bg-card rounded-2xl border border-border/50 hover:shadow-md transition-shadow">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl mb-4">
+              01
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Advanced Search</h3>
+            <p className="mt-2 text-sm text-muted-foreground text-center">
+              Filter properties by exact location, type, price, and features to find the perfect fit.
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="flex flex-col items-center p-6 bg-card rounded-2xl border border-border/50 hover:shadow-md transition-shadow">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl mb-4">
+              02
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Compare Options</h3>
+            <p className="mt-2 text-sm text-muted-foreground text-center">
+              Compare your favorite properties side-by-side on prices, amenities, and details.
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="flex flex-col items-center p-6 bg-card rounded-2xl border border-border/50 hover:shadow-md transition-shadow">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl mb-4">
+              03
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Verified Sellers</h3>
+            <p className="mt-2 text-sm text-muted-foreground text-center">
+              Deal directly with verified owners, premium builders, and vetted agencies.
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
