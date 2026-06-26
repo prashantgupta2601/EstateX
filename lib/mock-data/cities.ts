@@ -9,7 +9,7 @@ export const mockCities: CityData[] = [
   {
     id: 'city-mumbai',
     name: 'Mumbai',
-    image: 'https://images.unsplash.com/photo-1529250856085-ad1d2831e17c?w=600&auto=format&fit=crop&q=80',
+    image: 'https://media.cntraveller.in/wp-content/uploads/2018/06/Mumbai-Drone-Photo-1.jpg',
     propertyCount: 14200,
   },
   {
@@ -39,7 +39,7 @@ export const mockCities: CityData[] = [
   {
     id: 'city-hyderabad',
     name: 'Hyderabad',
-    image: 'https://images.unsplash.com/photo-1601880340244-78ddc8b66324?w=600&auto=format&fit=crop&q=80',
+    image: 'https://wallpaperaccess.com/full/2142440.jpg',
     propertyCount: 7800,
   },
   {
