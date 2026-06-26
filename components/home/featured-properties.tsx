@@ -8,8 +8,8 @@ import { mockProperties } from '@/lib/mock-data/properties';
 import { Button } from '@/components/ui/button';
 
 export default function FeaturedProperties() {
-  // Only display properties marked as featured (in our mock data, they all are, but we'll show first 4 for visual spacing)
-  const featuredListings = mockProperties.filter((p) => p.featured).slice(0, 4);
+  // Only display properties marked as featured (in our mock data, they all are, but we'll show first 6 for visual spacing)
+  const featuredListings = mockProperties.filter((p) => p.featured).slice(0, 6);
 
   return (
     <section className="py-16 bg-background">
