@@ -16,7 +16,7 @@ import {
 export default function PropertySearchBar() {
   const [purpose, setPurpose] = useState<string>('buy');
   const [location, setLocation] = useState<string>('');
-  const [propertyType, setPropertyType] = useState<string>('apartment');
+  const [propertyType, setPropertyType] = useState<string>('Apartment');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +61,7 @@ export default function PropertySearchBar() {
           <div className="relative">
             <Input
               type="text"
-              placeholder="Enter city, locality or project name"
+              placeholder="Enter city or locality"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="h-11 w-full pl-3 pr-4 rounded-xl border-border bg-background/50 hover:bg-background/80 focus-visible:bg-background transition-colors text-sm"
@@ -77,15 +77,15 @@ export default function PropertySearchBar() {
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 px-1">
             <Home className="h-3.5 w-3.5 text-primary" /> Property Type
           </label>
-          <Select value={propertyType} onValueChange={(val) => setPropertyType(val || 'apartment')}>
+          <Select value={propertyType} onValueChange={(val) => setPropertyType(val || 'Apartment')}>
             <SelectTrigger className="h-11 w-full rounded-xl border-border bg-background/50 text-left hover:bg-background/80 focus-visible:bg-background transition-colors font-medium text-sm">
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border shadow-lg">
-              <SelectItem value="apartment">Apartment</SelectItem>
-              <SelectItem value="villa">Villa / House</SelectItem>
-              <SelectItem value="plot">Plot / Land</SelectItem>
-              <SelectItem value="office">Office Space</SelectItem>
+              <SelectItem value="Apartment">Apartment</SelectItem>
+              <SelectItem value="Villa">Villa</SelectItem>
+              <SelectItem value="Plot">Plot</SelectItem>
+              <SelectItem value="Office">Office</SelectItem>
             </SelectContent>
           </Select>
         </div>
