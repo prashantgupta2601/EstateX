@@ -54,9 +54,9 @@ export default function Footer() {
   ];
 
   const buyerLinks = [
-    { label: 'Buy Properties', href: '/search?type=sale' },
-    { label: 'Rent Properties', href: '/search?type=rent' },
-    { label: 'Commercial Buildings', href: '/search?type=commercial' },
+    { label: 'Buy Properties', href: '/properties' },
+    { label: 'Rent Properties', href: '/properties' },
+    { label: 'Commercial Buildings', href: '/properties' },
     { label: 'Wishlist Catalog', href: '/wishlist' },
     { label: 'EMI Calculator', href: '/emi-calculator' },
   ];
