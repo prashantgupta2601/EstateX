@@ -3,10 +3,18 @@
 import React, { useState, useMemo } from 'react';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyCard from '@/components/property/property-card';
+import PropertyCardList from '@/components/property/property-card-list';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -15,8 +23,13 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'area-desc';
+type ViewMode = 'grid' | 'list';
+
 export default function PropertiesListClient() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // Default Limits
   const MIN_PRICE = 1000000;
@@ -105,6 +118,35 @@ export default function PropertiesListClient() {
     });
   }, [filters, isPriceFilterActive]);
 
+  // Sort the filtered properties
+  const sortedProperties = useMemo(() => {
+    const sorted = [...filteredProperties];
+    switch (sortBy) {
+      case 'price-asc':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'area-desc':
+        sorted.sort((a, b) => b.area - a.area);
+        break;
+      case 'relevance':
+      default:
+        // Keep original order (featured first, then by creation date)
+        sorted.sort((a, b) => {
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        break;
+    }
+    return sorted;
+  }, [filteredProperties, sortBy]);
+
   // Determine if any filters are active
   const isFiltersActive = useMemo(() => {
     return (
@@ -124,6 +166,14 @@ export default function PropertiesListClient() {
   const removeFurnishingFilter = () => setFilters((p) => ({ ...p, furnishing: 'Any' }));
   const clearAllFilters = () => setFilters(defaultFilters);
 
+  const sortLabels: Record<SortOption, string> = {
+    'relevance': 'Relevance',
+    'price-asc': 'Price: Low to High',
+    'price-desc': 'Price: High to Low',
+    'newest': 'Newest First',
+    'area-desc': 'Area: Large to Small',
+  };
+
   return (
     <div className="mx-auto max-w-7xl w-full px-4 py-8 md:py-12 flex flex-col gap-6 text-left animate-fade-in">
       {/* Page Header */}
@@ -133,7 +183,7 @@ export default function PropertiesListClient() {
             Properties in India
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Found
+            {sortedProperties.length} {sortedProperties.length === 1 ? 'Property' : 'Properties'} Found
           </p>
         </div>
 
@@ -155,6 +205,53 @@ export default function PropertiesListClient() {
               <FilterSidebar filters={filters} onChange={setFilters} onApply={() => setIsFilterOpen(false)} />
             </SheetContent>
           </Sheet>
+        </div>
+      </div>
+
+      {/* Toolbar Row: Sort + View Toggle */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* Sort Dropdown */}
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+          <span className="text-xs font-bold text-muted-foreground hidden sm:block">Sort by:</span>
+          <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+            <SelectTrigger className="w-[190px] text-xs font-semibold cursor-pointer">
+              <SelectValue>{sortLabels[sortBy]}</SelectValue>
+            </SelectTrigger>
+            <SelectContent align="start" alignItemWithTrigger={false}>
+              <SelectItem value="relevance">Relevance</SelectItem>
+              <SelectItem value="price-asc">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc">Price: High to Low</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="area-desc">Area: Large to Small</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center gap-1 rounded-xl border border-border/80 p-0.5">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-all cursor-pointer ${
+              viewMode === 'grid'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+            aria-label="Grid view"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all cursor-pointer ${
+              viewMode === 'list'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+            aria-label="List view"
+          >
+            <List className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -230,16 +327,24 @@ export default function PropertiesListClient() {
           <FilterSidebar filters={filters} onChange={setFilters} className="p-6 rounded-2xl border border-border bg-card/50" />
         </aside>
 
-        {/* Right Main Grid Area */}
+        {/* Right Main Grid/List Area */}
         <div className="flex-1">
-          {filteredProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProperties.map((property) => (
-                <div key={property.id} className="h-full">
-                  <PropertyCard property={property} />
-                </div>
-              ))}
-            </div>
+          {sortedProperties.length > 0 ? (
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {sortedProperties.map((property) => (
+                  <div key={property.id} className="h-full">
+                    <PropertyCard property={property} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                {sortedProperties.map((property) => (
+                  <PropertyCardList key={property.id} property={property} />
+                ))}
+              </div>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border/85 rounded-3xl bg-card/25 min-h-[400px]">
               <div className="p-4.5 rounded-full bg-primary/10 text-primary mb-5">
