@@ -1,28 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
 import { SlidersHorizontal, Check, RefreshCw } from 'lucide-react';
 
+export interface FilterState {
+  priceRange: number[];
+  propertyTypes: string[];
+  bhk: string[];
+  selectedAmenities: string[];
+  furnishing: string;
+}
+
 interface FilterSidebarProps {
+  filters: FilterState;
+  onChange: (filters: FilterState) => void;
   onApply?: () => void;
   className?: string;
 }
 
-export default function FilterSidebar({ onApply, className }: FilterSidebarProps) {
+export default function FilterSidebar({ filters, onChange, onApply, className }: FilterSidebarProps) {
   // Limits
   const MIN_PRICE = 1000000; // 10 Lac
   const MAX_PRICE = 50000000; // 5 Cr
   const STEP = 500000; // 5 Lac
-
-  // Local Filter States
-  const [priceRange, setPriceRange] = useState<number[]>([MIN_PRICE, MAX_PRICE]);
-  const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
-  const [bhk, setBhk] = useState<string[]>([]);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [furnishing, setFurnishing] = useState<string>('Any');
 
   const propertyTypesOptions = [
     { label: 'Apartment', value: 'apartment' },
@@ -47,32 +50,37 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
 
   // Toggle Property Type Checkbox
   const togglePropertyType = (val: string) => {
-    setPropertyTypes((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
+    const updated = filters.propertyTypes.includes(val)
+      ? filters.propertyTypes.filter((item) => item !== val)
+      : [...filters.propertyTypes, val];
+    onChange({ ...filters, propertyTypes: updated });
   };
 
   // Toggle BHK Chips
   const toggleBhk = (val: string) => {
-    setBhk((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
+    const updated = filters.bhk.includes(val)
+      ? filters.bhk.filter((item) => item !== val)
+      : [...filters.bhk, val];
+    onChange({ ...filters, bhk: updated });
   };
 
   // Toggle Amenities Checkbox
   const toggleAmenity = (val: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
+    const updated = filters.selectedAmenities.includes(val)
+      ? filters.selectedAmenities.filter((item) => item !== val)
+      : [...filters.selectedAmenities, val];
+    onChange({ ...filters, selectedAmenities: updated });
   };
 
   // Reset all filters
   const handleClearAll = () => {
-    setPriceRange([MIN_PRICE, MAX_PRICE]);
-    setPropertyTypes([]);
-    setBhk([]);
-    setSelectedAmenities([]);
-    setFurnishing('Any');
+    onChange({
+      priceRange: [MIN_PRICE, MAX_PRICE],
+      propertyTypes: [],
+      bhk: [],
+      selectedAmenities: [],
+      furnishing: 'Any',
+    });
   };
 
   return (
@@ -100,14 +108,14 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
           <label className="text-sm font-bold text-muted-foreground">Price Range</label>
         </div>
         <div className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg w-fit">
-          {formatIndianCurrencyShort(priceRange[0])} - {formatIndianCurrencyShort(priceRange[1])}
+          {formatIndianCurrencyShort(filters.priceRange[0])} - {formatIndianCurrencyShort(filters.priceRange[1])}
         </div>
         <Slider
-          value={priceRange}
+          value={filters.priceRange}
           min={MIN_PRICE}
           max={MAX_PRICE}
           step={STEP}
-          onValueChange={(val) => setPriceRange(val as number[])}
+          onValueChange={(val) => onChange({ ...filters, priceRange: val as number[] })}
           className="mt-1"
         />
         <div className="flex justify-between text-[10px] font-bold text-muted-foreground/60">
@@ -123,7 +131,7 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
         <label className="text-sm font-bold text-muted-foreground">Property Type</label>
         <div className="flex flex-col gap-2">
           {propertyTypesOptions.map((opt) => {
-            const isChecked = propertyTypes.includes(opt.value);
+            const isChecked = filters.propertyTypes.includes(opt.value);
             return (
               <label
                 key={opt.value}
@@ -160,7 +168,7 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
         <label className="text-sm font-bold text-muted-foreground">Bedrooms (BHK)</label>
         <div className="flex flex-wrap gap-2">
           {bhkOptions.map((opt) => {
-            const isSelected = bhk.includes(opt);
+            const isSelected = filters.bhk.includes(opt);
             return (
               <button
                 key={opt}
@@ -186,7 +194,7 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
         <label className="text-sm font-bold text-muted-foreground">Amenities</label>
         <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1">
           {amenitiesOptions.map((opt) => {
-            const isChecked = selectedAmenities.includes(opt.value);
+            const isChecked = filters.selectedAmenities.includes(opt.value);
             return (
               <label
                 key={opt.value}
@@ -223,7 +231,7 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
         <label className="text-sm font-bold text-muted-foreground">Furnishing</label>
         <div className="flex flex-col gap-2">
           {furnishingOptions.map((opt) => {
-            const isChecked = furnishing === opt;
+            const isChecked = filters.furnishing === opt;
             return (
               <label
                 key={opt}
@@ -234,7 +242,7 @@ export default function FilterSidebar({ onApply, className }: FilterSidebarProps
                     type="radio"
                     name="furnishing"
                     checked={isChecked}
-                    onChange={() => setFurnishing(opt)}
+                    onChange={() => onChange({ ...filters, furnishing: opt })}
                     className="sr-only"
                   />
                   <div
