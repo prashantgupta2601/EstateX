@@ -58,6 +58,7 @@ export default function Footer() {
     { label: 'Rent Properties', href: '/search?type=rent' },
     { label: 'Commercial Buildings', href: '/search?type=commercial' },
     { label: 'Wishlist Catalog', href: '/wishlist' },
+    { label: 'EMI Calculator', href: '/emi-calculator' },
   ];
 
   const sellerLinks = [

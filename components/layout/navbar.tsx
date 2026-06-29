@@ -20,7 +20,7 @@ export default function Navbar() {
     { label: 'Commercial', href: '/search?type=commercial' },
     { label: 'Compare', href: '/compare' },
     { label: 'Wishlist', href: '/wishlist' },
-    { label: 'EMI Calculator', href: '/tools/emi-calculator' },
+    { label: 'EMI Calculator', href: '/emi-calculator' },
   ];
 
   return (
