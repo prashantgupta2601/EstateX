@@ -7,11 +7,17 @@ import { cn } from "@/lib/utils"
 
 function Slider({
   className,
+  value,
+  defaultValue,
   ...props
 }: SliderPrimitive.Root.Props) {
+  const isRange = Array.isArray(value) || Array.isArray(defaultValue);
+
   return (
     <SliderPrimitive.Root
       data-slot="slider"
+      value={value}
+      defaultValue={defaultValue}
       className={cn(
         "relative flex w-full touch-none select-none items-center py-2.5",
         className
@@ -22,7 +28,14 @@ function Slider({
         <SliderPrimitive.Track className="relative h-1.5 w-full grow rounded-full bg-muted/80">
           <SliderPrimitive.Indicator className="absolute h-full rounded-full bg-primary" />
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block size-5 rounded-full border border-primary bg-card shadow-md transition-all focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-pointer" />
+        {isRange ? (
+          <>
+            <SliderPrimitive.Thumb className="block size-5 rounded-full border border-primary bg-card shadow-md transition-all focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-pointer" />
+            <SliderPrimitive.Thumb className="block size-5 rounded-full border border-primary bg-card shadow-md transition-all focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-pointer" />
+          </>
+        ) : (
+          <SliderPrimitive.Thumb className="block size-5 rounded-full border border-primary bg-card shadow-md transition-all focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-pointer" />
+        )}
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   )
