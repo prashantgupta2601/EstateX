@@ -127,16 +127,31 @@ export default function EMICalculator() {
   };
 
   // Custom tooltips for Recharts
-  const renderCustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  const renderCustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: readonly {
+      payload?: {
+        name?: string;
+        value?: number;
+        color?: string;
+      };
+      name?: string | number;
+      value?: string | number | readonly (string | number)[];
+    }[];
+  }) => {
+    if (active && payload && payload.length && payload[0].payload) {
       const data = payload[0].payload;
       const total = amount + results.totalInterest;
-      const percent = ((data.value / total) * 100).toFixed(1);
+      const val = data.value ?? 0;
+      const percent = ((val / total) * 100).toFixed(1);
       return (
         <div className="bg-popover border border-border p-3 rounded-xl shadow-lg text-left">
-          <p className="text-sm font-bold text-popover-foreground">{data.name}</p>
+          <p className="text-sm font-bold text-popover-foreground">{data.name ?? ''}</p>
           <p className="text-sm font-semibold text-primary mt-1">
-            {formatIndianCurrency(data.value)}
+            {formatIndianCurrency(val)}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">{percent}% of Total Payable</p>
         </div>

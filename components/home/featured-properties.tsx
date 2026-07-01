@@ -28,7 +28,7 @@ export default function FeaturedProperties() {
               Explore our verified and hand-curated premier residential and commercial properties in prime locations.
             </p>
           </div>
-          <Link href="/search" className="shrink-0">
+          <Link href="/properties" className="shrink-0">
             <Button variant="outline" className="rounded-xl flex items-center gap-2 border-primary/20 text-primary hover:bg-primary/5 cursor-pointer font-semibold">
               <span>Explore All Listings</span>
               <ArrowRight className="h-4 w-4" />

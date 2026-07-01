@@ -13,18 +13,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { useRouter } from 'next/navigation';
+
 export default function PropertySearchBar() {
+  const router = useRouter();
   const [purpose, setPurpose] = useState<string>('buy');
   const [location, setLocation] = useState<string>('');
   const [propertyType, setPropertyType] = useState<string>('Apartment');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Searching properties:', {
-      purpose,
-      location,
-      propertyType,
-    });
+    const params = new URLSearchParams();
+    if (purpose) params.set('purpose', purpose);
+    if (location.trim()) params.set('location', location.trim());
+    if (propertyType) params.set('type', propertyType.toLowerCase());
+    router.push(`/properties?${params.toString()}`);
   };
 
   return (

@@ -15,9 +15,9 @@ import {
 
 export default function Navbar() {
   const navLinks = [
-    { label: 'Buy', href: '/properties' },
-    { label: 'Rent', href: '/properties' },
-    { label: 'Commercial', href: '/properties' },
+    { label: 'Buy', href: '/properties?purpose=buy' },
+    { label: 'Rent', href: '/properties?purpose=rent' },
+    { label: 'Commercial', href: '/properties?purpose=commercial' },
     { label: 'Compare', href: '/compare' },
     { label: 'Wishlist', href: '/wishlist' },
     { label: 'EMI Calculator', href: '/emi-calculator' },

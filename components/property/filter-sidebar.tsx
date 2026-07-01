@@ -1,12 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
 import { SlidersHorizontal, Check, RefreshCw } from 'lucide-react';
 
 export interface FilterState {
+  purpose: string; // 'buy' | 'rent' | 'commercial' | 'any'
+  location: string;
   priceRange: number[];
   propertyTypes: string[];
   bhk: string[];
@@ -22,10 +24,42 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({ filters, onChange, onApply, className }: FilterSidebarProps) {
-  // Limits
-  const MIN_PRICE = 1000000; // 10 Lac
-  const MAX_PRICE = 50000000; // 5 Cr
-  const STEP = 500000; // 5 Lac
+  // Determine dynamic price range parameters based on purpose
+  const isRent = filters.purpose === 'rent';
+  const MIN_PRICE = isRent ? 5000 : 1000000;      // 5k vs 10 Lac
+  const MAX_PRICE = isRent ? 300000 : 50000000;    // 3 Lac vs 5 Cr
+  const STEP = isRent ? 2000 : 500000;             // 2k vs 5 Lac
+
+  // Sync state during render when filters or limits change to avoid useEffect setState warnings
+  const [prevPriceRange, setPrevPriceRange] = useState<number[]>(filters.priceRange);
+  const [prevPurpose, setPrevPurpose] = useState<string>(filters.purpose);
+  const [localPriceRange, setLocalPriceRange] = useState<number[]>(() => {
+    const clampedMin = Math.max(MIN_PRICE, Math.min(MAX_PRICE, filters.priceRange[0]));
+    const clampedMax = Math.max(MIN_PRICE, Math.min(MAX_PRICE, filters.priceRange[1]));
+    return [clampedMin, clampedMax];
+  });
+
+  if (
+    filters.priceRange[0] !== prevPriceRange[0] ||
+    filters.priceRange[1] !== prevPriceRange[1] ||
+    filters.purpose !== prevPurpose
+  ) {
+    setPrevPriceRange(filters.priceRange);
+    setPrevPurpose(filters.purpose);
+    const clampedMin = Math.max(MIN_PRICE, Math.min(MAX_PRICE, filters.priceRange[0]));
+    const clampedMax = Math.max(MIN_PRICE, Math.min(MAX_PRICE, filters.priceRange[1]));
+    setLocalPriceRange([clampedMin, clampedMax]);
+  }
+
+  // Debounced parent state update for slider
+  useEffect(() => {
+    if (localPriceRange[0] !== filters.priceRange[0] || localPriceRange[1] !== filters.priceRange[1]) {
+      const timer = setTimeout(() => {
+        onChange({ ...filters, priceRange: localPriceRange });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [localPriceRange, filters, onChange]);
 
   const propertyTypesOptions = [
     { label: 'Apartment', value: 'apartment' },
@@ -72,9 +106,11 @@ export default function FilterSidebar({ filters, onChange, onApply, className }:
     onChange({ ...filters, selectedAmenities: updated });
   };
 
-  // Reset all filters
+  // Reset all filters (preserving the current purpose)
   const handleClearAll = () => {
     onChange({
+      purpose: filters.purpose,
+      location: filters.location,
       priceRange: [MIN_PRICE, MAX_PRICE],
       propertyTypes: [],
       bhk: [],
@@ -102,25 +138,64 @@ export default function FilterSidebar({ filters, onChange, onApply, className }:
         </Button>
       </div>
 
+      {/* Purpose Section */}
+      <div className="flex flex-col gap-3">
+        <label className="text-sm font-bold text-muted-foreground">Purpose</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: 'Buy', value: 'buy' },
+            { label: 'Rent', value: 'rent' },
+            { label: 'Commercial', value: 'commercial' },
+          ].map((opt) => {
+            const isSelected = filters.purpose === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  const targetRent = opt.value === 'rent';
+                  const newMin = targetRent ? 5000 : 1000000;
+                  const newMax = targetRent ? 300000 : 50000000;
+                  onChange({
+                    ...filters,
+                    purpose: opt.value,
+                    priceRange: [newMin, newMax],
+                  });
+                }}
+                className={`h-9 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-primary border-primary text-primary-foreground shadow-xs'
+                    : 'bg-background border-border/80 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <hr className="border-border/40" />
+
       {/* Price Range Section */}
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <label className="text-sm font-bold text-muted-foreground">Price Range</label>
         </div>
         <div className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg w-fit">
-          {formatIndianCurrencyShort(filters.priceRange[0])} - {formatIndianCurrencyShort(filters.priceRange[1])}
+          {formatIndianCurrencyShort(localPriceRange[0])} - {formatIndianCurrencyShort(localPriceRange[1])}
         </div>
         <Slider
-          value={filters.priceRange}
+          value={localPriceRange}
           min={MIN_PRICE}
           max={MAX_PRICE}
           step={STEP}
-          onValueChange={(val) => onChange({ ...filters, priceRange: val as number[] })}
+          onValueChange={(val) => setLocalPriceRange(val as number[])}
           className="mt-1"
         />
         <div className="flex justify-between text-[10px] font-bold text-muted-foreground/60">
-          <span>₹10 Lac</span>
-          <span>₹5 Cr</span>
+          <span>{isRent ? '₹5k' : '₹10 Lac'}</span>
+          <span>{isRent ? '₹3 Lac' : '₹5 Cr'}</span>
         </div>
       </div>
 

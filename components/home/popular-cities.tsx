@@ -19,7 +19,7 @@ export default function PopularCities() {
             Explore Properties by City
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Find residential houses, premium apartments, commercial spaces, and plots in India's major real estate hubs.
+            Find residential houses, premium apartments, commercial spaces, and plots in India&apos;s major real estate hubs.
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export default function PopularCities() {
           {mockCities.map((city) => (
             <Link
               key={city.id}
-              href={`/search?city=${encodeURIComponent(city.name)}`}
+              href={`/properties?location=${encodeURIComponent(city.name)}`}
               className="group relative overflow-hidden rounded-2xl aspect-[4/5] md:aspect-[3/4] shadow-xs hover:shadow-lg transition-all duration-300 border border-border/30"
             >
               {/* City Background Image */}

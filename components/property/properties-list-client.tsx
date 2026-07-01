@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SlidersHorizontal, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
 import {
@@ -27,41 +29,167 @@ type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'area-de
 type ViewMode = 'grid' | 'list';
 
 export default function PropertiesListClient() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  // Default Limits
-  const MIN_PRICE = 1000000;
-  const MAX_PRICE = 50000000;
+  // --- 1. Parse URL Query Parameters to Derive State ---
+  const purpose = (searchParams.get('purpose') || 'any') as 'buy' | 'rent' | 'commercial' | 'any';
+  const location = searchParams.get('location') || searchParams.get('city') || '';
+  const sortBy = (searchParams.get('sortBy') || 'relevance') as SortOption;
 
-  const defaultFilters: FilterState = {
-    priceRange: [MIN_PRICE, MAX_PRICE],
-    propertyTypes: [],
-    bhk: [],
-    selectedAmenities: [],
-    furnishing: 'Any',
+  const isRent = purpose === 'rent';
+  const MIN_PRICE = isRent ? 5000 : 1000000;
+  const MAX_PRICE = isRent ? 300000 : 50000000;
+
+  const priceMin = searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!, 10) : MIN_PRICE;
+  const priceMax = searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!, 10) : MAX_PRICE;
+
+  const typeParam = searchParams.get('type');
+  const bhkParam = searchParams.get('bhk');
+  const amenitiesParam = searchParams.get('amenities');
+  const furnishing = searchParams.get('furnishing') || 'Any';
+
+  // Assemble derived filter state object
+  const filters = useMemo<FilterState>(() => {
+    const propertyTypes = typeParam ? typeParam.split(',') : [];
+    const bhk = bhkParam ? bhkParam.split(',') : [];
+    const selectedAmenities = amenitiesParam ? amenitiesParam.split(',') : [];
+
+    return {
+      purpose,
+      location,
+      priceRange: [priceMin, priceMax],
+      propertyTypes,
+      bhk,
+      selectedAmenities,
+      furnishing,
+    };
+  }, [purpose, location, priceMin, priceMax, typeParam, bhkParam, amenitiesParam, furnishing]);
+
+  // Local state for search text input (so typing is smooth)
+  const [prevLocation, setPrevLocation] = useState<string>(location);
+  const [localSearch, setLocalSearch] = useState<string>(location);
+
+  if (location !== prevLocation) {
+    setPrevLocation(location);
+    setLocalSearch(location);
+  }
+
+  // --- 2. Centralized URL Navigation Handler ---
+  const handleFilterChange = useCallback((newFilters: FilterState, newSortBy: SortOption = sortBy) => {
+    const params = new URLSearchParams();
+
+    // 1. Purpose
+    if (newFilters.purpose && newFilters.purpose !== 'any') {
+      params.set('purpose', newFilters.purpose);
+    }
+
+    // 2. Location
+    if (newFilters.location.trim()) {
+      params.set('location', newFilters.location.trim());
+    }
+
+    // 3. Price Range (only append if different from the default limits based on purpose)
+    const targetRent = newFilters.purpose === 'rent';
+    const defMin = targetRent ? 5000 : 1000000;
+    const defMax = targetRent ? 300000 : 50000000;
+
+    if (newFilters.priceRange[0] !== defMin) {
+      params.set('priceMin', newFilters.priceRange[0].toString());
+    }
+    if (newFilters.priceRange[1] !== defMax) {
+      params.set('priceMax', newFilters.priceRange[1].toString());
+    }
+
+    // 4. Property Types
+    if (newFilters.propertyTypes.length > 0) {
+      params.set('type', newFilters.propertyTypes.join(','));
+    }
+
+    // 5. BHK
+    if (newFilters.bhk.length > 0) {
+      params.set('bhk', newFilters.bhk.join(','));
+    }
+
+    // 6. Amenities
+    if (newFilters.selectedAmenities.length > 0) {
+      params.set('amenities', newFilters.selectedAmenities.join(','));
+    }
+
+    // 7. Furnishing
+    if (newFilters.furnishing && newFilters.furnishing !== 'Any') {
+      params.set('furnishing', newFilters.furnishing);
+    }
+
+    // 8. Sort
+    if (newSortBy && newSortBy !== 'relevance') {
+      params.set('sortBy', newSortBy);
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, sortBy]);
+
+  // Specific Handlers
+  const handleSortChange = (val: SortOption) => {
+    handleFilterChange(filters, val);
   };
 
-  // Lifted state
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleFilterChange({ ...filters, location: localSearch.trim() });
+  };
 
-  // Check if price filter is dirty (modified from defaults)
-  const isPriceFilterActive = useMemo(() => {
-    return filters.priceRange[0] !== MIN_PRICE || filters.priceRange[1] !== MAX_PRICE;
-  }, [filters, MIN_PRICE, MAX_PRICE]);
+  const handlePurposeChange = (val: string) => {
+    const targetRent = val === 'rent';
+    const newMin = targetRent ? 5000 : 1000000;
+    const newMax = targetRent ? 300000 : 50000000;
 
-  // Compute live-filtered properties array
+    handleFilterChange({
+      ...filters,
+      purpose: val,
+      priceRange: [newMin, newMax],
+    });
+  };
+
+  // --- 3. Compute Live Filtered Properties ---
   const filteredProperties = useMemo(() => {
     return mockProperties.filter((property) => {
-      // 1. Price Range filter (only apply if explicitly modified)
-      if (isPriceFilterActive) {
-        if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
-          return false;
-        }
+      // 1. Purpose filter (Buy vs Rent vs Commercial vs Any)
+      if (filters.purpose && filters.purpose !== 'any') {
+        if (filters.purpose === 'buy' && property.type !== 'sale') return false;
+        if (filters.purpose === 'rent' && property.type !== 'rent') return false;
+        if (filters.purpose === 'commercial' && property.propertyType !== 'commercial') return false;
       }
 
-      // 2. Property Type filter
+      // 2. Keyword/Location search (matches city, address, state, title, description)
+      if (filters.location) {
+        const q = filters.location.toLowerCase().trim();
+        const city = property.location.city.toLowerCase();
+        const address = property.location.address.toLowerCase();
+        const state = property.location.state.toLowerCase();
+        const title = property.title.toLowerCase();
+        const desc = property.description.toLowerCase();
+
+        const matches =
+          city.includes(q) ||
+          address.includes(q) ||
+          state.includes(q) ||
+          title.includes(q) ||
+          desc.includes(q);
+
+        if (!matches) return false;
+      }
+
+      // 3. Price range filter (guaranteed safe boundaries)
+      if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
+        return false;
+      }
+
+      // 4. Property Type filter
       if (filters.propertyTypes.length > 0) {
         const matches = filters.propertyTypes.some((ft) => {
           if (ft === 'apartment') return property.propertyType === 'apartment' || property.propertyType === 'condo';
@@ -73,7 +201,7 @@ export default function PropertiesListClient() {
         if (!matches) return false;
       }
 
-      // 3. BHK (Bedrooms) filter
+      // 5. BHK (Bedrooms) filter
       if (filters.bhk.length > 0) {
         const matches = filters.bhk.some((b) => {
           if (b === '4+') return property.bedrooms >= 4;
@@ -82,7 +210,7 @@ export default function PropertiesListClient() {
         if (!matches) return false;
       }
 
-      // 4. Amenities filter (ALL selected must match - AND joined)
+      // 6. Amenities filter (AND matching)
       if (filters.selectedAmenities.length > 0) {
         const hasAll = filters.selectedAmenities.every((fa) => {
           return property.amenities.some((a) => {
@@ -99,7 +227,7 @@ export default function PropertiesListClient() {
         if (!hasAll) return false;
       }
 
-      // 5. Furnishing filter (matches strings inside the description)
+      // 7. Furnishing filter
       if (filters.furnishing !== 'Any') {
         const desc = property.description.toLowerCase();
         if (filters.furnishing === 'Furnished') {
@@ -116,7 +244,7 @@ export default function PropertiesListClient() {
 
       return true;
     });
-  }, [filters, isPriceFilterActive]);
+  }, [filters]);
 
   // Sort the filtered properties
   const sortedProperties = useMemo(() => {
@@ -147,7 +275,12 @@ export default function PropertiesListClient() {
     return sorted;
   }, [filteredProperties, sortBy]);
 
-  // Determine if any filters are active
+  // Check if price filter is dirty (modified from defaults based on purpose)
+  const isPriceFilterActive = useMemo(() => {
+    return filters.priceRange[0] !== MIN_PRICE || filters.priceRange[1] !== MAX_PRICE;
+  }, [filters.priceRange, MIN_PRICE, MAX_PRICE]);
+
+  // Check if any filters are active
   const isFiltersActive = useMemo(() => {
     return (
       isPriceFilterActive ||
@@ -158,13 +291,21 @@ export default function PropertiesListClient() {
     );
   }, [filters, isPriceFilterActive]);
 
-  // Individual chip removal handlers
-  const removePriceFilter = () => setFilters((p) => ({ ...p, priceRange: [MIN_PRICE, MAX_PRICE] }));
-  const removePropertyTypeFilter = (val: string) => setFilters((p) => ({ ...p, propertyTypes: p.propertyTypes.filter((x) => x !== val) }));
-  const removeBhkFilter = (val: string) => setFilters((p) => ({ ...p, bhk: p.bhk.filter((x) => x !== val) }));
-  const removeAmenityFilter = (val: string) => setFilters((p) => ({ ...p, selectedAmenities: p.selectedAmenities.filter((x) => x !== val) }));
-  const removeFurnishingFilter = () => setFilters((p) => ({ ...p, furnishing: 'Any' }));
-  const clearAllFilters = () => setFilters(defaultFilters);
+  // Chip removal handlers
+  const removePriceFilter = () => handleFilterChange({ ...filters, priceRange: [MIN_PRICE, MAX_PRICE] });
+  const removePropertyTypeFilter = (val: string) => handleFilterChange({ ...filters, propertyTypes: filters.propertyTypes.filter((x) => x !== val) });
+  const removeBhkFilter = (val: string) => handleFilterChange({ ...filters, bhk: filters.bhk.filter((x) => x !== val) });
+  const removeAmenityFilter = (val: string) => handleFilterChange({ ...filters, selectedAmenities: filters.selectedAmenities.filter((x) => x !== val) });
+  const removeFurnishingFilter = () => handleFilterChange({ ...filters, furnishing: 'Any' });
+  const clearAllFilters = () => handleFilterChange({
+    purpose: filters.purpose,
+    location: filters.location,
+    priceRange: [MIN_PRICE, MAX_PRICE],
+    propertyTypes: [],
+    bhk: [],
+    selectedAmenities: [],
+    furnishing: 'Any',
+  });
 
   const sortLabels: Record<SortOption, string> = {
     'relevance': 'Relevance',
@@ -174,37 +315,103 @@ export default function PropertiesListClient() {
     'area-desc': 'Area: Large to Small',
   };
 
+  const getHeadingTitle = () => {
+    let base = 'Properties';
+    if (filters.purpose === 'buy') base = 'Properties for Sale';
+    else if (filters.purpose === 'rent') base = 'Properties for Rent';
+    else if (filters.purpose === 'commercial') base = 'Commercial Properties';
+
+    if (filters.location) {
+      return `${base} in ${filters.location.charAt(0).toUpperCase() + filters.location.slice(1)}`;
+    }
+    return `${base} in India`;
+  };
+
   return (
     <div className="mx-auto max-w-7xl w-full px-4 py-8 md:py-12 flex flex-col gap-6 text-left animate-fade-in">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-border/40 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Properties in India
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {sortedProperties.length} {sortedProperties.length === 1 ? 'Property' : 'Properties'} Found
-          </p>
+      
+      {/* Page Header & Search controls */}
+      <div className="flex flex-col gap-6 pb-6 border-b border-border/40">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground capitalize">
+              {getHeadingTitle()}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {sortedProperties.length} {sortedProperties.length === 1 ? 'Property' : 'Properties'} Found
+            </p>
+          </div>
+
+          {/* Mobile Filters Trigger */}
+          <div className="lg:hidden">
+            <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <SheetTrigger
+                render={
+                  <Button variant="outline" className="flex items-center gap-2 rounded-xl border-border/80 text-foreground font-semibold px-4 cursor-pointer">
+                    <SlidersHorizontal className="h-4 w-4 text-primary" />
+                    <span>Filters</span>
+                  </Button>
+                }
+              />
+              <SheetContent side="right" className="p-6 overflow-y-auto max-w-xs sm:max-w-sm">
+                <SheetHeader className="text-left border-b pb-4 mb-4">
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <FilterSidebar filters={filters} onChange={handleFilterChange} onApply={() => setIsFilterOpen(false)} />
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
-        {/* Mobile Filters Trigger */}
-        <div className="lg:hidden">
-          <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <SheetTrigger
-              render={
-                <Button variant="outline" className="flex items-center gap-2 rounded-xl border-border/80 text-foreground font-semibold px-4 cursor-pointer">
-                  <SlidersHorizontal className="h-4 w-4 text-primary" />
-                  <span>Filters</span>
-                </Button>
-              }
-            />
-            <SheetContent side="right" className="p-6 overflow-y-auto max-w-xs sm:max-w-sm">
-              <SheetHeader className="text-left border-b pb-4 mb-4">
-                <SheetTitle>Filters</SheetTitle>
-              </SheetHeader>
-              <FilterSidebar filters={filters} onChange={setFilters} onApply={() => setIsFilterOpen(false)} />
-            </SheetContent>
-          </Sheet>
+        {/* Premium Search & Purpose Tabs bar */}
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center bg-card/45 backdrop-blur-md border border-border/60 rounded-2xl p-4 shadow-xs">
+          {/* Keyword Search Input */}
+          <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Search by city, locality, project..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                className="h-11 w-full pl-3 pr-4 rounded-xl border-border bg-background/50 hover:bg-background/80 focus-visible:bg-background transition-colors text-sm"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5 shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>Search</span>
+            </Button>
+          </form>
+
+          {/* Separator for desktop */}
+          <div className="hidden md:block h-8 w-px bg-border/60" />
+
+          {/* Purpose Toggle (All / Buy / Rent / Commercial) */}
+          <div className="flex items-center gap-1 rounded-xl border border-border/85 bg-background/30 p-1">
+            {[
+              { label: 'All', value: 'any' },
+              { label: 'Buy', value: 'buy' },
+              { label: 'Rent', value: 'rent' },
+              { label: 'Commercial', value: 'commercial' },
+            ].map((tab) => {
+              const isSelected = filters.purpose === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => handlePurposeChange(tab.value)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -214,7 +421,7 @@ export default function PropertiesListClient() {
         <div className="flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
           <span className="text-xs font-bold text-muted-foreground hidden sm:block">Sort by:</span>
-          <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+          <Select value={sortBy} onValueChange={(val) => handleSortChange(val as SortOption)}>
             <SelectTrigger className="w-[190px] text-xs font-semibold cursor-pointer">
               <SelectValue>{sortLabels[sortBy]}</SelectValue>
             </SelectTrigger>
@@ -324,7 +531,7 @@ export default function PropertiesListClient() {
       <div className="flex gap-8 items-start">
         {/* Desktop Sticky Sidebar */}
         <aside className="w-68 shrink-0 hidden lg:block sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
-          <FilterSidebar filters={filters} onChange={setFilters} className="p-6 rounded-2xl border border-border bg-card/50" />
+          <FilterSidebar filters={filters} onChange={handleFilterChange} className="p-6 rounded-2xl border border-border bg-card/50" />
         </aside>
 
         {/* Right Main Grid/List Area */}
