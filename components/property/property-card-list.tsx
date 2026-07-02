@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, MapPin, Bed, Maximize, ShieldCheck, Calendar } from 'lucide-react';
 import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/badge';
@@ -37,12 +38,12 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
       {/* Image Section */}
       <div className="relative w-full sm:w-72 md:w-80 shrink-0 aspect-video sm:aspect-auto sm:min-h-[220px] overflow-hidden bg-muted">
         {property.images?.[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={property.images[0]}
             alt={property.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 288px, 320px"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground text-sm">

@@ -1,6 +1,5 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyGallery from '@/components/property/property-gallery';
