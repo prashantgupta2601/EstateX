@@ -5,6 +5,7 @@ import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyGallery from '@/components/property/property-gallery';
 import PropertyCard from '@/components/property/property-card';
 import InquiryForm from '@/components/property/inquiry-form';
+import PropertyDetailsActions from '@/components/property/property-details-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,8 +32,6 @@ import {
   Mail, 
   Phone, 
   ArrowLeft, 
-  Heart, 
-  Share2,
   ShieldCheck
 } from 'lucide-react';
 import { formatIndianCurrency } from '@/lib/utils/emi-calculator';
@@ -85,14 +84,7 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
               <span>Back to Listings</span>
             </Button>
           </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon-sm" className="rounded-full cursor-pointer hover:bg-muted" aria-label="Share property">
-              <Share2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-            </Button>
-            <Button variant="outline" size="icon-sm" className="rounded-full cursor-pointer hover:bg-muted" aria-label="Add to favorites">
-              <Heart className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-            </Button>
-          </div>
+          <PropertyDetailsActions property={property} />
         </div>
 
         {/* Title and Price Header Section */}

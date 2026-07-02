@@ -1,19 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, MapPin, Bed, Maximize, ShieldCheck, Calendar } from 'lucide-react';
+import { Heart, MapPin, Bed, Maximize, ShieldCheck, Calendar, GitCompare } from 'lucide-react';
 import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useEstate } from '@/lib/context/estate-context';
 
 interface PropertyCardListProps {
   property: Property;
 }
 
 export default function PropertyCardList({ property }: PropertyCardListProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { toggleWishlist, isInWishlist, addToCompare, removeFromCompare, isInCompare, isMounted } = useEstate();
+  const isWishlisted = isMounted ? isInWishlist(property.id) : false;
+  const isCompared = isMounted ? isInCompare(property.id) : false;
 
   const formatPrice = (price: number, type: 'sale' | 'rent') => {
     let formatted = '';
@@ -65,21 +68,49 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
             <div />
           )}
 
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-            }}
-            className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 pointer-events-auto hover:scale-110 active:scale-95 ${
-              isWishlisted
-                ? 'bg-red-500 border-red-500 text-white'
-                : 'bg-white/80 dark:bg-black/50 border-white/20 text-muted-foreground hover:text-foreground'
-            }`}
-            aria-label="Add to wishlist"
-          >
-            <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
-          </button>
+          {/* Action Buttons (Wishlist & Compare) */}
+          <div className="flex items-center gap-2 pointer-events-auto">
+            {/* Compare Button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isCompared) {
+                  removeFromCompare(property.id);
+                } else {
+                  const res = addToCompare(property);
+                  if (!res.success) {
+                    alert(res.message);
+                  }
+                }
+              }}
+              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+                isCompared
+                  ? 'bg-primary border-primary text-primary-foreground'
+                  : 'bg-white/80 dark:bg-black/50 border-white/20 text-muted-foreground hover:text-foreground'
+              }`}
+              aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
+            >
+              <GitCompare className="h-4 w-4" />
+            </button>
+
+            {/* Wishlist Heart Button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleWishlist(property.id);
+              }}
+              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+                isWishlisted
+                  ? 'bg-red-500 border-red-500 text-white'
+                  : 'bg-white/80 dark:bg-black/50 border-white/20 text-muted-foreground hover:text-foreground'
+              }`}
+              aria-label="Add to wishlist"
+            >
+              <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Listing Type Tag */}

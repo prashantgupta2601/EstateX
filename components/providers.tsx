@@ -1,12 +1,16 @@
 'use client';
 
 import React from 'react';
+import { EstateProvider } from '@/lib/context/estate-context';
 
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
 export default function Providers({ children }: ProvidersProps) {
-  // We can integrate React Query, next-themes, or other state providers here later.
-  return <>{children}</>;
+  return (
+    <EstateProvider>
+      {children}
+    </EstateProvider>
+  );
 }

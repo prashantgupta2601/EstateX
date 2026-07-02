@@ -12,14 +12,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useEstate } from '@/lib/context/estate-context';
 
 export default function Navbar() {
+  const { wishlist, compareList, isMounted } = useEstate();
+
   const navLinks = [
     { label: 'Buy', href: '/properties?purpose=buy' },
     { label: 'Rent', href: '/properties?purpose=rent' },
     { label: 'Commercial', href: '/properties?purpose=commercial' },
-    { label: 'Compare', href: '/compare' },
-    { label: 'Wishlist', href: '/wishlist' },
+    { 
+      label: isMounted && compareList.length > 0 ? `Compare (${compareList.length})` : 'Compare', 
+      href: '/compare' 
+    },
+    { 
+      label: isMounted && wishlist.length > 0 ? `Wishlist (${wishlist.length})` : 'Wishlist', 
+      href: '/wishlist' 
+    },
     { label: 'EMI Calculator', href: '/emi-calculator' },
   ];
 
@@ -43,7 +52,7 @@ export default function Navbar() {
         <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
           {navLinks.map((link) => (
             <Link 
-              key={link.label} 
+              key={link.href} 
               href={link.href} 
               className="hover:text-primary hover:underline underline-offset-4 transition-colors"
             >
@@ -87,7 +96,7 @@ export default function Navbar() {
                 <nav className="flex flex-col gap-4 text-base font-semibold text-muted-foreground mt-4">
                   {navLinks.map((link) => (
                     <Link 
-                      key={link.label} 
+                      key={link.href} 
                       href={link.href} 
                       className="hover:text-primary transition-colors py-2 border-b border-border/40"
                     >
