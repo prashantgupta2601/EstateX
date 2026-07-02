@@ -21,6 +21,10 @@ export const mockProperties: Property[] = [
       city: 'Gurugram',
       state: 'Haryana',
       zipCode: '122002',
+      coordinates: {
+        lat: 28.4595,
+        lng: 77.0266,
+      },
     },
     amenities: [
       { id: '1', name: 'Gym', icon: 'Dumbbell' },
@@ -58,6 +62,10 @@ export const mockProperties: Property[] = [
       city: 'New Delhi',
       state: 'Delhi',
       zipCode: '110062',
+      coordinates: {
+        lat: 28.5140,
+        lng: 77.2330,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },
@@ -95,6 +103,10 @@ export const mockProperties: Property[] = [
       city: 'Noida',
       state: 'Uttar Pradesh',
       zipCode: '201301',
+      coordinates: {
+        lat: 28.6273,
+        lng: 77.3725,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -131,6 +143,10 @@ export const mockProperties: Property[] = [
       city: 'Hyderabad',
       state: 'Telangana',
       zipCode: '500081',
+      coordinates: {
+        lat: 17.4483,
+        lng: 78.3741,
+      },
     },
     amenities: [
       { id: '7', name: 'High-speed Internet', icon: 'Wifi' },
@@ -168,6 +184,10 @@ export const mockProperties: Property[] = [
       city: 'Bengaluru',
       state: 'Karnataka',
       zipCode: '562110',
+      coordinates: {
+        lat: 13.2500,
+        lng: 77.7100,
+      },
     },
     amenities: [
       { id: '9', name: 'Gated Community', icon: 'Fence' },
@@ -204,6 +224,10 @@ export const mockProperties: Property[] = [
       city: 'Bengaluru',
       state: 'Karnataka',
       zipCode: '560066',
+      coordinates: {
+        lat: 12.9698,
+        lng: 77.7499,
+      },
     },
     amenities: [
       { id: '1', name: 'Gym', icon: 'Dumbbell' },
@@ -241,6 +265,10 @@ export const mockProperties: Property[] = [
       city: 'Hyderabad',
       state: 'Telangana',
       zipCode: '500032',
+      coordinates: {
+        lat: 17.4401,
+        lng: 78.3489,
+      },
     },
     amenities: [
       { id: '1', name: 'Gym', icon: 'Dumbbell' },
@@ -278,6 +306,10 @@ export const mockProperties: Property[] = [
       city: 'New Delhi',
       state: 'Delhi',
       zipCode: '110001',
+      coordinates: {
+        lat: 28.6304,
+        lng: 77.2177,
+      },
     },
     amenities: [
       { id: '6', name: '24x7 Security', icon: 'Shield' },
@@ -312,6 +344,10 @@ export const mockProperties: Property[] = [
       city: 'New Delhi',
       state: 'Delhi',
       zipCode: '110049',
+      coordinates: {
+        lat: 28.5685,
+        lng: 77.2215,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -341,6 +377,10 @@ export const mockProperties: Property[] = [
       city: 'Mumbai',
       state: 'Maharashtra',
       zipCode: '400059',
+      coordinates: {
+        lat: 19.1155,
+        lng: 72.8660,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -370,6 +410,10 @@ export const mockProperties: Property[] = [
       city: 'Bengaluru',
       state: 'Karnataka',
       zipCode: '560100',
+      coordinates: {
+        lat: 12.8452,
+        lng: 77.6602,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },
@@ -399,6 +443,10 @@ export const mockProperties: Property[] = [
       city: 'Chennai',
       state: 'Tamil Nadu',
       zipCode: '600090',
+      coordinates: {
+        lat: 12.9975,
+        lng: 80.2676,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },
@@ -428,6 +476,10 @@ export const mockProperties: Property[] = [
       city: 'Pune',
       state: 'Maharashtra',
       zipCode: '411001',
+      coordinates: {
+        lat: 18.5362,
+        lng: 73.8930,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },
@@ -457,6 +509,10 @@ export const mockProperties: Property[] = [
       city: 'Hyderabad',
       state: 'Telangana',
       zipCode: '500033',
+      coordinates: {
+        lat: 17.4312,
+        lng: 78.4008,
+      },
     },
     amenities: [
       { id: '1', name: 'Gym', icon: 'Dumbbell' },
@@ -486,6 +542,10 @@ export const mockProperties: Property[] = [
       city: 'Gurugram',
       state: 'Haryana',
       zipCode: '122002',
+      coordinates: {
+        lat: 28.4682,
+        lng: 77.0822,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -515,6 +575,10 @@ export const mockProperties: Property[] = [
       city: 'Kolkata',
       state: 'West Bengal',
       zipCode: '700027',
+      coordinates: {
+        lat: 22.5280,
+        lng: 88.3280,
+      },
     },
     amenities: [
       { id: '4', name: 'Private Garden', icon: 'Flower' },
@@ -544,6 +608,10 @@ export const mockProperties: Property[] = [
       city: 'Mumbai',
       state: 'Maharashtra',
       zipCode: '400050',
+      coordinates: {
+        lat: 19.0583,
+        lng: 72.8215,
+      },
     },
     amenities: [
       { id: '1', name: 'Gym', icon: 'Dumbbell' },
@@ -573,6 +641,10 @@ export const mockProperties: Property[] = [
       city: 'New Delhi',
       state: 'Delhi',
       zipCode: '110075',
+      coordinates: {
+        lat: 28.5920,
+        lng: 77.0460,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -602,6 +674,10 @@ export const mockProperties: Property[] = [
       city: 'Bengaluru',
       state: 'Karnataka',
       zipCode: '560038',
+      coordinates: {
+        lat: 12.9784,
+        lng: 77.6408,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -631,6 +707,10 @@ export const mockProperties: Property[] = [
       city: 'Hyderabad',
       state: 'Telangana',
       zipCode: '500032',
+      coordinates: {
+        lat: 17.4250,
+        lng: 78.3400,
+      },
     },
     amenities: [
       { id: '6', name: '24x7 Security', icon: 'Shield' },
@@ -660,6 +740,10 @@ export const mockProperties: Property[] = [
       city: 'Pune',
       state: 'Maharashtra',
       zipCode: '411028',
+      coordinates: {
+        lat: 18.5089,
+        lng: 73.9259,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },
@@ -689,6 +773,10 @@ export const mockProperties: Property[] = [
       city: 'Chennai',
       state: 'Tamil Nadu',
       zipCode: '600020',
+      coordinates: {
+        lat: 13.0063,
+        lng: 80.2574,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -718,6 +806,10 @@ export const mockProperties: Property[] = [
       city: 'Kolkata',
       state: 'West Bengal',
       zipCode: '700091',
+      coordinates: {
+        lat: 22.5750,
+        lng: 88.4200,
+      },
     },
     amenities: [
       { id: '3', name: 'Power Backup', icon: 'Zap' },
@@ -747,6 +839,10 @@ export const mockProperties: Property[] = [
       city: 'Gurugram',
       state: 'Haryana',
       zipCode: '122002',
+      coordinates: {
+        lat: 28.4795,
+        lng: 77.0800,
+      },
     },
     amenities: [
       { id: '6', name: '24x7 Security', icon: 'Shield' },
@@ -776,6 +872,10 @@ export const mockProperties: Property[] = [
       city: 'Mumbai',
       state: 'Maharashtra',
       zipCode: '400018',
+      coordinates: {
+        lat: 19.0250,
+        lng: 72.8170,
+      },
     },
     amenities: [
       { id: '2', name: 'Swimming Pool', icon: 'Waves' },

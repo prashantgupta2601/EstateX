@@ -2,13 +2,14 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SlidersHorizontal, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, X, LayoutGrid, List, Map, ArrowUpDown } from 'lucide-react';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
 import {
   Select,
@@ -25,8 +26,20 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+const PropertyMap = dynamic(
+  () => import('@/components/property/property-map'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[600px] rounded-3xl border border-border/80 bg-card/25 flex items-center justify-center animate-pulse">
+        <span className="text-sm font-semibold text-muted-foreground animate-bounce">Loading Map View...</span>
+      </div>
+    ),
+  }
+);
+
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'area-desc';
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'map';
 
 export default function PropertiesListClient() {
   const router = useRouter();
@@ -438,6 +451,7 @@ export default function PropertiesListClient() {
         {/* View Toggle */}
         <div className="flex items-center gap-1 rounded-xl border border-border/80 p-0.5">
           <button
+            type="button"
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all cursor-pointer ${
               viewMode === 'grid'
@@ -449,6 +463,7 @@ export default function PropertiesListClient() {
             <LayoutGrid className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all cursor-pointer ${
               viewMode === 'list'
@@ -458,6 +473,18 @@ export default function PropertiesListClient() {
             aria-label="List view"
           >
             <List className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            className={`p-2 rounded-lg transition-all cursor-pointer ${
+              viewMode === 'map'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+            aria-label="Map view"
+          >
+            <Map className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -545,12 +572,14 @@ export default function PropertiesListClient() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : viewMode === 'list' ? (
               <div className="flex flex-col gap-5">
                 {sortedProperties.map((property) => (
                   <PropertyCardList key={property.id} property={property} />
                 ))}
               </div>
+            ) : (
+              <PropertyMap properties={sortedProperties} />
             )
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border/85 rounded-3xl bg-card/25 min-h-[400px]">

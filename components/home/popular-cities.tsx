@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Map, Landmark } from 'lucide-react';
 import { mockCities } from '@/lib/mock-data/cities';
 
@@ -32,11 +33,13 @@ export default function PopularCities() {
               className="group relative overflow-hidden rounded-2xl aspect-[4/5] md:aspect-[3/4] shadow-xs hover:shadow-lg transition-all duration-300 border border-border/30"
             >
               {/* City Background Image */}
-              <img
+              <Image
                 src={city.image}
                 alt={city.name}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                priority={city.id === 'city-mumbai'}
               />
 
               {/* Gradient Overlay */}
