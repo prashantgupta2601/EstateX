@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { mockProperties } from '@/lib/mock-data/properties';
-import PropertyGallery from '@/components/property/property-gallery';
+import ImageGallery from '@/components/property/image-gallery';
 import PropertyCard from '@/components/property/property-card';
 import InquiryForm from '@/components/property/inquiry-form';
 import PropertyDetailsActions from '@/components/property/property-details-actions';
@@ -119,7 +119,7 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
         </div>
 
         {/* Property Image Gallery */}
-        <PropertyGallery images={property.images} />
+        <ImageGallery images={property.images} />
 
         {/* Details Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-4">

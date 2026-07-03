@@ -14,7 +14,11 @@ export const mockProperties: Property[] = [
     area: 1850,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+1+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+1+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+1+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+1+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+1+-+Bathroom',
     ],
     location: {
       address: 'Golf Course Road',
@@ -55,7 +59,11 @@ export const mockProperties: Property[] = [
     area: 3600,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+2+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+2+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+2+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+2+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+2+-+Bathroom',
     ],
     location: {
       address: 'Sainik Farms',
@@ -96,7 +104,11 @@ export const mockProperties: Property[] = [
     area: 1100,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+3+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+3+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+3+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+3+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+3+-+Bathroom',
     ],
     location: {
       address: 'Sector 62',
@@ -136,7 +148,11 @@ export const mockProperties: Property[] = [
     area: 2400,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+4+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+4+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+4+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+4+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+4+-+Bathroom',
     ],
     location: {
       address: 'Hitech City',
@@ -177,7 +193,11 @@ export const mockProperties: Property[] = [
     area: 1500,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+5+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+5+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+5+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+5+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+5+-+Bathroom',
     ],
     location: {
       address: 'Devanahalli',
@@ -217,7 +237,11 @@ export const mockProperties: Property[] = [
     area: 1950,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+6+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+6+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+6+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+6+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+6+-+Bathroom',
     ],
     location: {
       address: 'Whitefield',
@@ -258,7 +282,11 @@ export const mockProperties: Property[] = [
     area: 1250,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+7+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+7+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+7+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+7+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+7+-+Bathroom',
     ],
     location: {
       address: 'Gachibowli',
@@ -299,7 +327,11 @@ export const mockProperties: Property[] = [
     area: 850,
     areaUnit: 'sqft',
     images: [
-      'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&auto=format&fit=crop&q=80',
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+8+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+8+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+8+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+8+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+8+-+Bathroom',
     ],
     location: {
       address: 'Connaught Place',
@@ -338,7 +370,13 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 1650,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+9+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+9+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+9+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+9+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+9+-+Bathroom',
+    ],
     location: {
       address: 'South Extension Part 2',
       city: 'New Delhi',
@@ -371,7 +409,13 @@ export const mockProperties: Property[] = [
     bathrooms: 1,
     area: 550,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+10+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+10+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+10+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+10+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+10+-+Bathroom',
+    ],
     location: {
       address: 'J.B. Nagar, Andheri East',
       city: 'Mumbai',
@@ -404,7 +448,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1050,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+11+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+11+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+11+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+11+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+11+-+Bathroom',
+    ],
     location: {
       address: 'Phase 1, Electronic City',
       city: 'Bengaluru',
@@ -437,7 +487,13 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 1700,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+12+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+12+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+12+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+12+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+12+-+Bathroom',
+    ],
     location: {
       address: 'Besant Nagar',
       city: 'Chennai',
@@ -470,7 +526,13 @@ export const mockProperties: Property[] = [
     bathrooms: 4,
     area: 3200,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+13+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+13+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+13+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+13+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+13+-+Bathroom',
+    ],
     location: {
       address: 'Koregaon Park',
       city: 'Pune',
@@ -503,7 +565,13 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 2100,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+14+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+14+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+14+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+14+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+14+-+Bathroom',
+    ],
     location: {
       address: 'Jubilee Hills',
       city: 'Hyderabad',
@@ -536,7 +604,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1300,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+15+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+15+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+15+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+15+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+15+-+Bathroom',
+    ],
     location: {
       address: 'DLF Phase 4',
       city: 'Gurugram',
@@ -569,7 +643,13 @@ export const mockProperties: Property[] = [
     bathrooms: 4,
     area: 3400,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+16+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+16+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+16+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+16+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+16+-+Bathroom',
+    ],
     location: {
       address: 'Alipore',
       city: 'Kolkata',
@@ -602,7 +682,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1100,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+17+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+17+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+17+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+17+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+17+-+Bathroom',
+    ],
     location: {
       address: 'Carter Road, Bandra West',
       city: 'Mumbai',
@@ -635,7 +721,13 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 1550,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+18+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+18+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+18+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+18+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+18+-+Bathroom',
+    ],
     location: {
       address: 'Sector 10, Dwarka',
       city: 'New Delhi',
@@ -668,7 +760,13 @@ export const mockProperties: Property[] = [
     bathrooms: 1,
     area: 650,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+19+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+19+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+19+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+19+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+19+-+Bathroom',
+    ],
     location: {
       address: 'Indiranagar',
       city: 'Bengaluru',
@@ -701,7 +799,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 2800,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+20+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+20+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+20+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+20+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+20+-+Bathroom',
+    ],
     location: {
       address: 'Financial District, Gachibowli',
       city: 'Hyderabad',
@@ -734,7 +838,13 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 1600,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+21+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+21+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+21+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+21+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+21+-+Bathroom',
+    ],
     location: {
       address: 'Hadapsar',
       city: 'Pune',
@@ -767,7 +877,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1100,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+22+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+22+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+22+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+22+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+22+-+Bathroom',
+    ],
     location: {
       address: 'Adyar',
       city: 'Chennai',
@@ -800,7 +916,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1350,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+23+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+23+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+23+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+23+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+23+-+Bathroom',
+    ],
     location: {
       address: 'Sector 3, Salt Lake',
       city: 'Kolkata',
@@ -833,7 +955,13 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 2100,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+24+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+24+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+24+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+24+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+24+-+Bathroom',
+    ],
     location: {
       address: 'MG Road',
       city: 'Gurugram',
@@ -866,7 +994,13 @@ export const mockProperties: Property[] = [
     bathrooms: 5,
     area: 3100,
     areaUnit: 'sqft',
-    images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80'],
+    images: [
+      'https://placehold.co/800x600/1e293b/ffffff?text=Property+25+-+Main+View',
+      'https://placehold.co/800x600/0f172a/ffffff?text=Property+25+-+Living+Room',
+      'https://placehold.co/800x600/334155/ffffff?text=Property+25+-+Kitchen',
+      'https://placehold.co/800x600/475569/ffffff?text=Property+25+-+Bedroom',
+      'https://placehold.co/800x600/64748b/ffffff?text=Property+25+-+Bathroom',
+    ],
     location: {
       address: 'Worli Seaface',
       city: 'Mumbai',
