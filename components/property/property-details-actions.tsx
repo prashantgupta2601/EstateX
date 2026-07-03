@@ -18,12 +18,26 @@ export default function PropertyDetailsActions({ property }: PropertyDetailsActi
   const isCompared = isMounted ? isInCompare(property.id) : false;
 
   const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    const shareData = {
+      title: property.title,
+      text: `Check out this property: ${property.title} in ${property.location.city}`,
+      url: typeof window !== 'undefined' ? window.location.href : '',
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
     }
   };
 
