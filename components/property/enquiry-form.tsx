@@ -3,24 +3,25 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { toast } from '@/components/ui/toast';
+import { Send, AlertCircle } from 'lucide-react';
 
-interface InquiryFormProps {
+interface EnquiryFormProps {
   propertyTitle: string;
   agentName: string;
+  onSuccess?: () => void;
 }
 
-export default function InquiryForm({ propertyTitle, agentName }: InquiryFormProps) {
+export default function EnquiryForm({ propertyTitle, agentName, onSuccess }: EnquiryFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: `Hi, I am interested in "${propertyTitle}". Please contact me with more details.`,
+    message: 'I am interested in this property',
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -35,10 +36,11 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (!formData.phone.trim()) {
+    const cleanPhone = formData.phone.replace(/\s+/g, '');
+    if (!cleanPhone) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\+?[0-9\s-]{10,15}$/.test(formData.phone.trim())) {
-      newErrors.phone = 'Please enter a valid phone number (min 10 digits)';
+    } else if (!/^[0-9]{10}$/.test(cleanPhone)) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
     if (!formData.message.trim()) {
@@ -52,7 +54,6 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error on change
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -67,52 +68,30 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1500);
+      console.log('Lead Enquiry Submitted:', {
+        ...formData,
+        phone: `+91 ${formData.phone}`,
+        propertyTitle,
+        agentName,
+      });
+      
+      toast('Enquiry sent successfully! The seller will contact you soon.');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    }, 1200);
   };
-
-  const handleReset = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      message: `Hi, I am interested in "${propertyTitle}". Please contact me with more details.`,
-    });
-    setErrors({});
-    setIsSuccess(false);
-  };
-
-  if (isSuccess) {
-    return (
-      <div className="flex flex-col items-center justify-center p-6 text-center bg-success/5 border border-success/20 rounded-2xl animate-fade-in py-8">
-        <div className="p-3 rounded-full bg-success/10 text-success mb-4">
-          <CheckCircle2 className="h-10 w-10 animate-bounce" />
-        </div>
-        <h3 className="text-lg font-bold text-foreground">Inquiry Sent!</h3>
-        <p className="mt-2 text-xs text-muted-foreground max-w-[240px] leading-relaxed">
-          Your inquiry for <strong>{propertyTitle}</strong> has been forwarded to <strong>{agentName}</strong>. They will contact you shortly.
-        </p>
-        <Button
-          onClick={handleReset}
-          variant="outline"
-          size="sm"
-          className="mt-6 rounded-xl border-border/80 text-xs font-semibold cursor-pointer"
-        >
-          Send Another Message
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Name Field */}
-      <div className="flex flex-col gap-1.5 text-left">
-        <label htmlFor="name" className="text-xs font-bold text-muted-foreground px-1">
+      <div className="flex flex-col gap-1 text-left">
+        <label htmlFor="enquiry-name" className="text-xs font-bold text-muted-foreground px-1">
           Full Name
         </label>
         <Input
-          id="name"
+          id="enquiry-name"
           name="name"
           type="text"
           placeholder="e.g. Rahul Sharma"
@@ -124,20 +103,51 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
           }`}
         />
         {errors.name && (
-          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5">
+          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5 animate-fade-in">
             <AlertCircle className="h-3 w-3" />
             {errors.name}
           </span>
         )}
       </div>
 
+      {/* Phone Field */}
+      <div className="flex flex-col gap-1 text-left">
+        <label htmlFor="enquiry-phone" className="text-xs font-bold text-muted-foreground px-1">
+          Phone Number
+        </label>
+        <div className="relative flex items-center">
+          <div className="absolute left-3 text-sm font-bold text-muted-foreground border-r border-border pr-2 py-1 select-none">
+            +91
+          </div>
+          <Input
+            id="enquiry-phone"
+            name="phone"
+            type="tel"
+            maxLength={10}
+            placeholder="9876543210"
+            value={formData.phone}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            className={`h-10 pl-14 rounded-xl bg-background/50 text-sm ${
+              errors.phone ? 'border-destructive focus-visible:ring-destructive' : 'border-border'
+            }`}
+          />
+        </div>
+        {errors.phone && (
+          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5 animate-fade-in">
+            <AlertCircle className="h-3 w-3" />
+            {errors.phone}
+          </span>
+        )}
+      </div>
+
       {/* Email Field */}
-      <div className="flex flex-col gap-1.5 text-left">
-        <label htmlFor="email" className="text-xs font-bold text-muted-foreground px-1">
+      <div className="flex flex-col gap-1 text-left">
+        <label htmlFor="enquiry-email" className="text-xs font-bold text-muted-foreground px-1">
           Email Address
         </label>
         <Input
-          id="email"
+          id="enquiry-email"
           name="email"
           type="email"
           placeholder="e.g. rahul@example.com"
@@ -149,48 +159,22 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
           }`}
         />
         {errors.email && (
-          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5">
+          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5 animate-fade-in">
             <AlertCircle className="h-3 w-3" />
             {errors.email}
           </span>
         )}
       </div>
 
-      {/* Phone Field */}
-      <div className="flex flex-col gap-1.5 text-left">
-        <label htmlFor="phone" className="text-xs font-bold text-muted-foreground px-1">
-          Phone Number
-        </label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          placeholder="e.g. 9876543210"
-          value={formData.phone}
-          onChange={handleChange}
-          disabled={isSubmitting}
-          className={`h-10 rounded-xl bg-background/50 text-sm ${
-            errors.phone ? 'border-destructive focus-visible:ring-destructive' : 'border-border'
-          }`}
-        />
-        {errors.phone && (
-          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5">
-            <AlertCircle className="h-3 w-3" />
-            {errors.phone}
-          </span>
-        )}
-      </div>
-
       {/* Message Field */}
-      <div className="flex flex-col gap-1.5 text-left">
-        <label htmlFor="message" className="text-xs font-bold text-muted-foreground px-1">
+      <div className="flex flex-col gap-1 text-left">
+        <label htmlFor="enquiry-message" className="text-xs font-bold text-muted-foreground px-1">
           Message
         </label>
         <textarea
-          id="message"
+          id="enquiry-message"
           name="message"
           rows={3}
-          placeholder="I am interested in..."
           value={formData.message}
           onChange={handleChange}
           disabled={isSubmitting}
@@ -199,7 +183,7 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
           }`}
         />
         {errors.message && (
-          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5">
+          <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 px-1 mt-0.5 animate-fade-in">
             <AlertCircle className="h-3 w-3" />
             {errors.message}
           </span>
@@ -210,17 +194,17 @@ export default function InquiryForm({ propertyTitle, agentName }: InquiryFormPro
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full h-10 mt-2 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-80"
+        className="w-full h-10 mt-2 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-85"
       >
         {isSubmitting ? (
           <>
             <span className="h-4 w-4 border-2 border-primary-foreground/35 border-t-primary-foreground rounded-full animate-spin" />
-            <span>Sending Inquiry...</span>
+            <span>Submitting Enquiry...</span>
           </>
         ) : (
           <>
             <Send className="h-4 w-4" />
-            <span>Send Inquiry</span>
+            <span>Send Enquiry</span>
           </>
         )}
       </Button>

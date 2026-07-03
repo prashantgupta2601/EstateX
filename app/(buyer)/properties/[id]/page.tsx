@@ -4,18 +4,11 @@ import { notFound } from 'next/navigation';
 import { mockProperties } from '@/lib/mock-data/properties';
 import ImageGallery from '@/components/property/image-gallery';
 import PropertySpecs from '@/components/property/property-specs';
+import SellerContactCard from '@/components/property/seller-contact-card';
 import PropertyCard from '@/components/property/property-card';
-import InquiryForm from '@/components/property/inquiry-form';
 import PropertyDetailsActions from '@/components/property/property-details-actions';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Star, 
-  Mail, 
-  Phone, 
-  ArrowLeft
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import SinglePropertyMapWrapper from '@/components/property/single-property-map-wrapper';
 
 interface PropertyDetailsPageProps {
@@ -62,6 +55,11 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
           <div className="lg:col-span-8 flex flex-col gap-8">
             <PropertySpecs property={property} />
 
+            {/* Seller Contact Card for Mobile/Tablet */}
+            <div className="block lg:hidden">
+              <SellerContactCard property={property} />
+            </div>
+
             {/* Map Location */}
             {property.location.coordinates && (
               <section className="text-left flex flex-col gap-4">
@@ -80,56 +78,7 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
           {/* Right Column: Agent Info & Sticky Contact Card */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <aside className="sticky top-24 flex flex-col gap-6">
-              
-              {/* Agent Card */}
-              <div className="bg-card border border-border/80 rounded-3xl p-6 shadow-md flex flex-col gap-5 text-left">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14 border border-border">
-                    {property.agent.image ? (
-                      <AvatarImage src={property.agent.image} alt={property.agent.name} className="object-cover animate-fade-in" />
-                    ) : null}
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                      {property.agent.name.split(' ').map((n) => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <h3 className="font-bold text-foreground">{property.agent.name}</h3>
-                    {property.agent.isVerified && property.agent.role && (
-                      <Badge className={`w-fit mt-1 border-none font-bold text-[9px] uppercase tracking-wider ${
-                        property.agent.role === 'owner' 
-                          ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      }`}>
-                        {property.agent.role === 'owner' ? 'Verified Owner' : 'Verified Broker'}
-                      </Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
-                      <strong>{property.agent.rating || 4.8}</strong> Rating
-                    </span>
-                  </div>
-                </div>
-
-                <hr className="border-border/60" />
-
-                <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="h-4 w-4 text-primary shrink-0" />
-                    <span>{property.agent.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <Mail className="h-4 w-4 text-primary shrink-0" />
-                    <span className="break-all">{property.agent.email}</span>
-                  </div>
-                </div>
-
-                <hr className="border-border/60" />
-
-                {/* Inquiry Form component */}
-                <InquiryForm propertyTitle={property.title} agentName={property.agent.name} />
-
-              </div>
-
+              <SellerContactCard property={property} />
             </aside>
           </div>
 
