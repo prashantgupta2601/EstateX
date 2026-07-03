@@ -9,8 +9,9 @@ import PropertyCardList from '@/components/property/property-card-list';
 import EmptyState from '@/components/property/empty-state';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import AdvancedFiltersModal, { getActiveAdvancedFiltersCount } from '@/components/property/advanced-filters-modal';
+import LocationAutocomplete from '@/components/ui/location-autocomplete';
+import { LocalityItem } from '@/lib/mock-data/localities';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidersHorizontal, X, LayoutGrid, List, Map, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
@@ -192,6 +193,7 @@ export default function PropertiesListClient() {
   const waterSupply = searchParams.get('waterSupply') || 'any';
   const overlookingParam = searchParams.get('overlooking');
   const availableFrom = searchParams.get('availableFrom') || null;
+  const locality = searchParams.get('locality') || '';
 
   // Assemble derived filter state object
   const filters = useMemo<FilterState>(() => {
@@ -217,6 +219,8 @@ export default function PropertiesListClient() {
       waterSupply,
       overlooking,
       availableFrom,
+      // Autocomplete
+      locality,
     };
   }, [
     purpose, 
@@ -233,16 +237,19 @@ export default function PropertiesListClient() {
     facing,
     waterSupply,
     overlookingParam,
-    availableFrom
+    availableFrom,
+    locality,
   ]);
 
   // Local state for search text input (so typing is smooth)
   const [prevLocation, setPrevLocation] = useState<string>(location);
   const [localSearch, setLocalSearch] = useState<string>(location);
+  const [localSelectedItem, setLocalSelectedItem] = useState<LocalityItem | undefined>(undefined);
 
   if (location !== prevLocation) {
     setPrevLocation(location);
     setLocalSearch(location);
+    setLocalSelectedItem(undefined);
   }
 
   // --- 2. Centralized URL Navigation Handler ---
@@ -338,6 +345,11 @@ export default function PropertiesListClient() {
       params.set('sort', currentSort);
     }
 
+    // 16. Locality
+    if (newFilters.locality && newFilters.locality.trim()) {
+      params.set('locality', newFilters.locality.trim());
+    }
+
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [pathname, router, searchParams]);
 
@@ -356,7 +368,14 @@ export default function PropertiesListClient() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleFilterChange({ ...filters, location: localSearch.trim() });
+    
+    const updatedFilters = {
+      ...filters,
+      location: localSelectedItem ? localSelectedItem.city : localSearch.trim(),
+      locality: localSelectedItem && localSelectedItem.type === 'locality' ? localSelectedItem.name : '',
+    };
+    
+    handleFilterChange(updatedFilters);
   };
 
   const handlePurposeChange = (val: string) => {
@@ -381,23 +400,38 @@ export default function PropertiesListClient() {
         if (filters.purpose === 'commercial' && property.propertyType !== 'commercial') return false;
       }
 
-      // 2. Keyword/Location search (matches city, address, state, title, description)
-      if (filters.location) {
+      // 2. City & Locality filters (or fallback search keyword matching)
+      if (filters.locality) {
+        const qLocality = filters.locality.toLowerCase().trim();
+        const matchesLocality = property.location.address.toLowerCase().includes(qLocality);
+        if (!matchesLocality) return false;
+        
+        if (filters.location) {
+          const qCity = filters.location.toLowerCase().trim();
+          const matchesCity = property.location.city.toLowerCase() === qCity;
+          if (!matchesCity) return false;
+        }
+      } else if (filters.location) {
         const q = filters.location.toLowerCase().trim();
         const city = property.location.city.toLowerCase();
-        const address = property.location.address.toLowerCase();
-        const state = property.location.state.toLowerCase();
-        const title = property.title.toLowerCase();
-        const desc = property.description.toLowerCase();
-
-        const matches =
-          city.includes(q) ||
-          address.includes(q) ||
-          state.includes(q) ||
-          title.includes(q) ||
-          desc.includes(q);
-
-        if (!matches) return false;
+        
+        // If it is an exact city name in localities, match equality, else fall back to text match
+        const isKnownCity = ['mumbai', 'new delhi', 'gurugram', 'noida', 'bengaluru', 'hyderabad', 'chennai', 'pune'].includes(q);
+        if (isKnownCity) {
+          if (city !== q) return false;
+        } else {
+          const address = property.location.address.toLowerCase();
+          const state = property.location.state.toLowerCase();
+          const title = property.title.toLowerCase();
+          const desc = property.description.toLowerCase();
+          const matchesKeyword =
+            city.includes(q) ||
+            address.includes(q) ||
+            state.includes(q) ||
+            title.includes(q) ||
+            desc.includes(q);
+          if (!matchesKeyword) return false;
+        }
       }
 
       // 3. Price range filter (guaranteed safe boundaries)
@@ -620,7 +654,7 @@ export default function PropertiesListClient() {
   const removeFurnishingFilter = () => handleFilterChange({ ...filters, furnishing: 'Any' });
   const clearAllFilters = () => handleFilterChange({
     purpose: filters.purpose,
-    location: filters.location,
+    location: '',
     priceRange: [MIN_PRICE, MAX_PRICE],
     propertyTypes: [],
     bhk: [],
@@ -633,6 +667,7 @@ export default function PropertiesListClient() {
     waterSupply: 'any',
     overlooking: [],
     availableFrom: null,
+    locality: '',
   });
 
   const sortLabels: Record<SortOption, string> = {
@@ -695,13 +730,14 @@ export default function PropertiesListClient() {
         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center bg-card/45 backdrop-blur-md border border-border/60 rounded-2xl p-4 shadow-xs">
           {/* Keyword Search Input */}
           <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                placeholder="Search by city, locality, project..."
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                className="h-11 w-full pl-3 pr-4 rounded-xl border-border bg-background/50 hover:bg-background/80 focus-visible:bg-background transition-colors text-sm"
+            <div className="relative flex-1 w-full">
+              <LocationAutocomplete 
+                value={localSearch} 
+                onChange={(val, item) => {
+                  setLocalSearch(val);
+                  setLocalSelectedItem(item);
+                }}
+                placeholder="Search by city or locality..."
               />
             </div>
             <Button

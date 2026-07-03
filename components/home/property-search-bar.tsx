@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import LocationAutocomplete from '@/components/ui/location-autocomplete';
+import { LocalityItem } from '@/lib/mock-data/localities';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -19,13 +20,23 @@ export default function PropertySearchBar() {
   const router = useRouter();
   const [purpose, setPurpose] = useState<string>('buy');
   const [location, setLocation] = useState<string>('');
+  const [selectedItem, setSelectedItem] = useState<LocalityItem | undefined>(undefined);
   const [propertyType, setPropertyType] = useState<string>('Apartment');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (purpose) params.set('purpose', purpose);
-    if (location.trim()) params.set('city', location.trim());
+    
+    if (selectedItem) {
+      params.set('city', selectedItem.city);
+      if (selectedItem.type === 'locality') {
+        params.set('locality', selectedItem.name);
+      }
+    } else if (location.trim()) {
+      params.set('city', location.trim());
+    }
+
     if (propertyType) params.set('type', propertyType.toLowerCase());
     router.push(`/properties?${params.toString()}`);
   };
@@ -61,13 +72,14 @@ export default function PropertySearchBar() {
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 px-1">
             <MapPin className="h-3.5 w-3.5 text-primary" /> Location
           </label>
-          <div className="relative">
-            <Input
-              type="text"
+          <div className="relative flex-grow w-full">
+            <LocationAutocomplete 
+              value={location} 
+              onChange={(val, item) => {
+                setLocation(val);
+                setSelectedItem(item);
+              }}
               placeholder="Enter city or locality"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="h-11 w-full pl-3 pr-4 rounded-xl border-border bg-background/50 hover:bg-background/80 focus-visible:bg-background transition-colors text-sm"
             />
           </div>
         </div>

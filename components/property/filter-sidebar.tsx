@@ -22,6 +22,8 @@ export interface FilterState {
   waterSupply?: string;
   overlooking?: string[];
   availableFrom?: string | null;
+  city?: string;
+  locality?: string;
 }
 
 interface FilterSidebarProps {
