@@ -14,6 +14,14 @@ export interface FilterState {
   bhk: string[];
   selectedAmenities: string[];
   furnishing: string;
+  // Advanced filters
+  postedBy?: string;
+  propertyAge?: string[];
+  floorPreference?: string;
+  facing?: string;
+  waterSupply?: string;
+  overlooking?: string[];
+  availableFrom?: string | null;
 }
 
 interface FilterSidebarProps {

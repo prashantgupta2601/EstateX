@@ -8,6 +8,7 @@ import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
 import EmptyState from '@/components/property/empty-state';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
+import AdvancedFiltersModal, { getActiveAdvancedFiltersCount } from '@/components/property/advanced-filters-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,6 +83,52 @@ function PropertyCardListSkeleton() {
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'area-desc';
 type ViewMode = 'grid' | 'list' | 'map';
 
+// Deterministic mock property helper to support advanced filters without changing the DB file
+function getDeterministicPropertyDetails(id: string, agentRole: string, floorVal: number) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  hash = Math.abs(hash);
+
+  const postedBy = agentRole || 'broker';
+
+  const ageOptions = ['under-construction', 'ready-to-move', '0-1', '1-5', '5+'];
+  const propertyAge = ageOptions[(hash + 1) % ageOptions.length];
+
+  const floorPreference = floorVal === 0 
+    ? 'ground' 
+    : floorVal >= 5 
+      ? 'high-rise' 
+      : 'low-rise';
+
+  const facingOptions = ['east', 'west', 'north', 'south'];
+  const facing = facingOptions[(hash + 2) % facingOptions.length];
+
+  const waterSupply = ['corporation', 'borewell', 'both'][(hash + 3) % 3];
+
+  const overlookOptions = ['garden', 'road', 'pool', 'main-road'];
+  const overlooking = [
+    overlookOptions[(hash + 4) % overlookOptions.length],
+    overlookOptions[(hash + 5) % overlookOptions.length]
+  ];
+
+  const availableFromDays = (hash % 20) + 1;
+  const date = new Date('2026-07-04');
+  date.setDate(date.getDate() + availableFromDays);
+  const availableFrom = date.toISOString().split('T')[0];
+
+  return {
+    postedBy,
+    propertyAge,
+    floorPreference,
+    facing,
+    waterSupply,
+    overlooking,
+    availableFrom
+  };
+}
+
 export default function PropertiesListClient() {
   const router = useRouter();
   const pathname = usePathname();
@@ -109,11 +156,22 @@ export default function PropertiesListClient() {
   const amenitiesParam = searchParams.get('amenities');
   const furnishing = searchParams.get('furnishing') || 'Any';
 
+  // Advanced search parameters
+  const postedBy = searchParams.get('postedBy') || 'any';
+  const propertyAgeParam = searchParams.get('propertyAge');
+  const floorPreference = searchParams.get('floorPreference') || 'any';
+  const facing = searchParams.get('facing') || 'any';
+  const waterSupply = searchParams.get('waterSupply') || 'any';
+  const overlookingParam = searchParams.get('overlooking');
+  const availableFrom = searchParams.get('availableFrom') || null;
+
   // Assemble derived filter state object
   const filters = useMemo<FilterState>(() => {
     const propertyTypes = typeParam ? typeParam.split(',') : [];
     const bhk = bhkParam ? bhkParam.split(',') : [];
     const selectedAmenities = amenitiesParam ? amenitiesParam.split(',') : [];
+    const propertyAge = propertyAgeParam ? propertyAgeParam.split(',') : [];
+    const overlooking = overlookingParam ? overlookingParam.split(',') : [];
 
     return {
       purpose,
@@ -123,8 +181,32 @@ export default function PropertiesListClient() {
       bhk,
       selectedAmenities,
       furnishing,
+      // Advanced
+      postedBy,
+      propertyAge,
+      floorPreference,
+      facing,
+      waterSupply,
+      overlooking,
+      availableFrom,
     };
-  }, [purpose, location, priceMin, priceMax, typeParam, bhkParam, amenitiesParam, furnishing]);
+  }, [
+    purpose, 
+    location, 
+    priceMin, 
+    priceMax, 
+    typeParam, 
+    bhkParam, 
+    amenitiesParam, 
+    furnishing,
+    postedBy,
+    propertyAgeParam,
+    floorPreference,
+    facing,
+    waterSupply,
+    overlookingParam,
+    availableFrom
+  ]);
 
   // Local state for search text input (so typing is smooth)
   const [prevLocation, setPrevLocation] = useState<string>(location);
@@ -185,6 +267,41 @@ export default function PropertiesListClient() {
     // 7. Furnishing
     if (newFilters.furnishing && newFilters.furnishing !== 'Any') {
       params.set('furnishing', newFilters.furnishing);
+    }
+
+    // 8. Posted By
+    if (newFilters.postedBy && newFilters.postedBy !== 'any') {
+      params.set('postedBy', newFilters.postedBy);
+    }
+
+    // 9. Property Age
+    if (newFilters.propertyAge && newFilters.propertyAge.length > 0) {
+      params.set('propertyAge', newFilters.propertyAge.join(','));
+    }
+
+    // 10. Floor Preference
+    if (newFilters.floorPreference && newFilters.floorPreference !== 'any') {
+      params.set('floorPreference', newFilters.floorPreference);
+    }
+
+    // 11. Facing
+    if (newFilters.facing && newFilters.facing !== 'any') {
+      params.set('facing', newFilters.facing);
+    }
+
+    // 12. Water Supply
+    if (newFilters.waterSupply && newFilters.waterSupply !== 'any') {
+      params.set('waterSupply', newFilters.waterSupply);
+    }
+
+    // 13. Overlooking
+    if (newFilters.overlooking && newFilters.overlooking.length > 0) {
+      params.set('overlooking', newFilters.overlooking.join(','));
+    }
+
+    // 14. Available From
+    if (newFilters.purpose === 'rent' && newFilters.availableFrom) {
+      params.set('availableFrom', newFilters.availableFrom);
     }
 
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -302,6 +419,49 @@ export default function PropertiesListClient() {
           const isUnfurnished = desc.includes('unfurnished') || (!desc.includes('furnished') && !desc.includes('semi-furnished') && !desc.includes('semi furnished'));
           if (!isUnfurnished) return false;
         }
+      }
+
+      // 8. Advanced Filters
+      const details = getDeterministicPropertyDetails(property.id, property.agent.role || 'broker', property.floor || 0);
+
+      // Posted By
+      if (filters.postedBy && filters.postedBy !== 'any') {
+        if (details.postedBy !== filters.postedBy) return false;
+      }
+
+      // Property Age
+      if (filters.propertyAge && filters.propertyAge.length > 0) {
+        if (!filters.propertyAge.includes(details.propertyAge)) return false;
+      }
+
+      // Floor Preference
+      if (filters.floorPreference && filters.floorPreference !== 'any') {
+        if (details.floorPreference !== filters.floorPreference) return false;
+      }
+
+      // Facing
+      if (filters.facing && filters.facing !== 'any') {
+        if (details.facing !== filters.facing) return false;
+      }
+
+      // Water Supply
+      if (filters.waterSupply && filters.waterSupply !== 'any') {
+        if (filters.waterSupply === 'both') {
+          if (details.waterSupply !== 'both') return false;
+        } else {
+          if (details.waterSupply !== filters.waterSupply && details.waterSupply !== 'both') return false;
+        }
+      }
+
+      // Overlooking
+      if (filters.overlooking && filters.overlooking.length > 0) {
+        const matchesAll = filters.overlooking.every((o) => details.overlooking.includes(o));
+        if (!matchesAll) return false;
+      }
+
+      // Available From (Rent properties only)
+      if (filters.purpose === 'rent' && filters.availableFrom) {
+        if (details.availableFrom > filters.availableFrom) return false;
       }
 
       return true;
@@ -429,6 +589,13 @@ export default function PropertiesListClient() {
     bhk: [],
     selectedAmenities: [],
     furnishing: 'Any',
+    postedBy: 'any',
+    propertyAge: [],
+    floorPreference: 'any',
+    facing: 'any',
+    waterSupply: 'any',
+    overlooking: [],
+    availableFrom: null,
   });
 
   const sortLabels: Record<SortOption, string> = {
@@ -541,22 +708,46 @@ export default function PropertiesListClient() {
 
       {/* Toolbar Row: Sort + View Toggle */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
-          <span className="text-xs font-bold text-muted-foreground hidden sm:block">Sort by:</span>
-          <Select value={sortBy} onValueChange={(val) => handleSortChange(val as SortOption)}>
-            <SelectTrigger className="w-[190px] text-xs font-semibold cursor-pointer">
-              <SelectValue>{sortLabels[sortBy]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent align="start" alignItemWithTrigger={false}>
-              <SelectItem value="relevance">Relevance</SelectItem>
-              <SelectItem value="price-asc">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc">Price: High to Low</SelectItem>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="area-desc">Area: Large to Small</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Sort Dropdown & Advanced Filters Trigger */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <span className="text-xs font-bold text-muted-foreground hidden sm:block">Sort by:</span>
+            <Select value={sortBy} onValueChange={(val) => handleSortChange(val as SortOption)}>
+              <SelectTrigger className="w-[190px] text-xs font-semibold cursor-pointer">
+                <SelectValue>{sortLabels[sortBy]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent align="start" alignItemWithTrigger={false}>
+                <SelectItem value="relevance">Relevance</SelectItem>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="area-desc">Area: Large to Small</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <AdvancedFiltersModal 
+            filters={filters} 
+            onApply={handleFilterChange} 
+            trigger={
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 rounded-xl border-border/80 text-foreground font-semibold px-4 cursor-pointer text-xs h-9 relative"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                <span>Advanced Filters</span>
+                {(() => {
+                  const activeAdvancedCount = getActiveAdvancedFiltersCount(filters);
+                  return activeAdvancedCount > 0 ? (
+                    <span className="bg-primary text-primary-foreground text-[10px] font-black h-5 px-1.5 flex items-center justify-center rounded-full shadow-md">
+                      +{activeAdvancedCount}
+                    </span>
+                  ) : null;
+                })()}
+              </Button>
+            }
+          />
         </div>
 
         {/* View Toggle */}
