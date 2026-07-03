@@ -48,11 +48,11 @@ export default function PropertiesListClient() {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [sortBy, setSortBy] = useState<SortOption>('relevance');
 
   // --- 1. Parse URL Query Parameters to Derive State ---
   const purpose = (searchParams.get('purpose') || 'any') as 'buy' | 'rent' | 'commercial' | 'any';
   const location = searchParams.get('location') || searchParams.get('city') || '';
-  const sortBy = (searchParams.get('sortBy') || 'relevance') as SortOption;
 
   const isRent = purpose === 'rent';
   const MIN_PRICE = isRent ? 5000 : 1000000;
@@ -93,7 +93,7 @@ export default function PropertiesListClient() {
   }
 
   // --- 2. Centralized URL Navigation Handler ---
-  const handleFilterChange = useCallback((newFilters: FilterState, newSortBy: SortOption = sortBy) => {
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
     const params = new URLSearchParams();
 
     // 1. Purpose
@@ -138,17 +138,12 @@ export default function PropertiesListClient() {
       params.set('furnishing', newFilters.furnishing);
     }
 
-    // 8. Sort
-    if (newSortBy && newSortBy !== 'relevance') {
-      params.set('sortBy', newSortBy);
-    }
-
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, router, sortBy]);
+  }, [pathname, router]);
 
   // Specific Handlers
   const handleSortChange = (val: SortOption) => {
-    handleFilterChange(filters, val);
+    setSortBy(val);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
