@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -13,9 +13,11 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useEstate } from '@/lib/context/estate-context';
+import { useWishlist } from '@/lib/hooks/use-wishlist';
 
 export default function Navbar() {
-  const { wishlist, compareList, isMounted } = useEstate();
+  const { compareList, isMounted } = useEstate();
+  const { wishlist } = useWishlist();
 
   const navLinks = [
     { label: 'Buy', href: '/properties?purpose=buy' },
@@ -24,10 +26,6 @@ export default function Navbar() {
     { 
       label: isMounted && compareList.length > 0 ? `Compare (${compareList.length})` : 'Compare', 
       href: '/compare' 
-    },
-    { 
-      label: isMounted && wishlist.length > 0 ? `Wishlist (${wishlist.length})` : 'Wishlist', 
-      href: '/wishlist' 
     },
     { label: 'EMI Calculator', href: '/emi-calculator' },
   ];
@@ -63,6 +61,20 @@ export default function Navbar() {
 
         {/* Right Side: Desktop CTAs & Mobile Hamburger */}
         <div className="flex items-center gap-3">
+          {/* Wishlist Heart Icon with Count Badge */}
+          <Link 
+            href="/wishlist" 
+            className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            aria-label="Wishlist"
+          >
+            <Heart className="h-5 w-5" />
+            {isMounted && wishlist.length > 0 && (
+              <span className="absolute top-1 right-1 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center border border-background">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
+
           {/* Desktop Authentication buttons */}
           <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm">Login</Button>
@@ -103,6 +115,20 @@ export default function Navbar() {
                       {link.label}
                     </Link>
                   ))}
+                  
+                  {/* Mobile Wishlist link row with Pill Badge */}
+                  <Link 
+                    href="/wishlist" 
+                    className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between"
+                  >
+                    <span>Wishlist</span>
+                    {isMounted && wishlist.length > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </Link>
+
                   <div className="flex flex-col gap-2 mt-6">
                     <Button variant="outline" className="w-full">Login</Button>
                     <Button className="w-full">Sign Up</Button>

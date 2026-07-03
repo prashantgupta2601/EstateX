@@ -8,13 +8,17 @@ import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useEstate } from '@/lib/context/estate-context';
+import { useWishlist } from '@/lib/hooks/use-wishlist';
+import { toast } from '@/components/ui/toast';
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
-  const { toggleWishlist, isInWishlist, addToCompare, removeFromCompare, isInCompare, isMounted } = useEstate();
+  const { addToCompare, removeFromCompare, isInCompare, isMounted } = useEstate();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  
   const isWishlisted = isMounted ? isInWishlist(property.id) : false;
   const isCompared = isMounted ? isInCompare(property.id) : false;
 
@@ -96,7 +100,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleWishlist(property.id);
+                if (isWishlisted) {
+                  removeFromWishlist(property.id);
+                  toast("Removed from Wishlist");
+                } else {
+                  addToWishlist(property.id);
+                  toast("Added to Wishlist");
+                }
               }}
               className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
                 isWishlisted
