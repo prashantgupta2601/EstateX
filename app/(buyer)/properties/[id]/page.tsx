@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { mockProperties } from '@/lib/mock-data/properties';
 import ImageGallery from '@/components/property/image-gallery';
+import PropertySpecs from '@/components/property/property-specs';
 import PropertyCard from '@/components/property/property-card';
 import InquiryForm from '@/components/property/inquiry-form';
 import PropertyDetailsActions from '@/components/property/property-details-actions';
@@ -10,31 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Dumbbell, 
-  Waves, 
-  Zap, 
-  Flower, 
-  Shield, 
-  Wifi, 
-  Car, 
-  Smile, 
-  ArrowUpCircle, 
-  Home, 
-  PhoneCall, 
-  Sparkles,
-  BedDouble, 
-  Bath, 
-  Square, 
-  Calendar, 
-  Building2, 
-  MapPin, 
   Star, 
   Mail, 
   Phone, 
-  ArrowLeft, 
-  ShieldCheck
+  ArrowLeft
 } from 'lucide-react';
-import { formatIndianCurrency } from '@/lib/utils/emi-calculator';
 import SinglePropertyMapWrapper from '@/components/property/single-property-map-wrapper';
 
 interface PropertyDetailsPageProps {
@@ -54,23 +35,7 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
     .filter((p) => p.id !== property.id && (p.location.city === property.location.city || p.type === property.type))
     .slice(0, 3);
 
-  // Helper function to resolve Lucide Icon for amenities
-  const renderAmenityIcon = (iconName?: string) => {
-    switch (iconName?.toLowerCase()) {
-      case 'dumbbell': return <Dumbbell className="h-5 w-5 text-primary shrink-0" />;
-      case 'waves': return <Waves className="h-5 w-5 text-primary shrink-0" />;
-      case 'zap': return <Zap className="h-5 w-5 text-primary shrink-0" />;
-      case 'flower': return <Flower className="h-5 w-5 text-primary shrink-0" />;
-      case 'shield': return <Shield className="h-5 w-5 text-primary shrink-0" />;
-      case 'wifi': return <Wifi className="h-5 w-5 text-primary shrink-0" />;
-      case 'car': return <Car className="h-5 w-5 text-primary shrink-0" />;
-      case 'smile': return <Smile className="h-5 w-5 text-primary shrink-0" />;
-      case 'arrowupcircle': return <ArrowUpCircle className="h-5 w-5 text-primary shrink-0" />;
-      case 'home': return <Home className="h-5 w-5 text-primary shrink-0" />;
-      case 'phonecall': return <PhoneCall className="h-5 w-5 text-primary shrink-0" />;
-      default: return <Sparkles className="h-5 w-5 text-primary shrink-0" />;
-    }
-  };
+
 
   return (
     <div className="w-full min-h-screen bg-background flex flex-col">
@@ -87,37 +52,6 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
           <PropertyDetailsActions property={property} />
         </div>
 
-        {/* Title and Price Header Section */}
-        <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 pb-6 border-b border-border/40">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2 items-center">
-              <Badge className="bg-primary text-primary-foreground border-none font-bold px-3 py-0.5 rounded-md text-xs uppercase tracking-wider">
-                For {property.type === 'sale' ? 'Sale' : 'Rent'}
-              </Badge>
-              {property.isVerified && (
-                <Badge className="bg-success text-success-foreground border-none font-bold px-3 py-0.5 rounded-md text-xs flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Verified Listing</span>
-                </Badge>
-              )}
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-              {property.title}
-            </h1>
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary shrink-0" />
-              <span>{property.location.address}, {property.location.city}, {property.location.state} {property.location.zipCode}</span>
-            </p>
-          </div>
-          <div className="flex flex-col md:text-right shrink-0">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Asking Price</span>
-            <span className="text-2xl md:text-3xl font-extrabold text-primary">
-              {formatIndianCurrency(property.price)}
-              {property.type === 'rent' && <span className="text-sm font-normal text-muted-foreground">/mo</span>}
-            </span>
-          </div>
-        </div>
-
         {/* Property Image Gallery */}
         <ImageGallery images={property.images} />
 
@@ -126,105 +60,7 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
           
           {/* Left Column: Property Details & Info */}
           <div className="lg:col-span-8 flex flex-col gap-8">
-            
-            {/* Core Overview Specs */}
-            <section className="bg-card/30 border border-border/60 rounded-3xl p-6">
-              <h2 className="text-lg font-bold text-foreground mb-4">Property Overview</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                
-                {/* Bedrooms */}
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <BedDouble className="h-5 w-5" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bedrooms</span>
-                    <span className="text-sm font-bold text-foreground">{property.bedrooms} BHK</span>
-                  </div>
-                </div>
-
-                {/* Bathrooms */}
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <Bath className="h-5 w-5" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Bathrooms</span>
-                    <span className="text-sm font-bold text-foreground">{property.bathrooms} Baths</span>
-                  </div>
-                </div>
-
-                {/* Area */}
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <Square className="h-5 w-5" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Super Area</span>
-                    <span className="text-sm font-bold text-foreground">{property.area.toLocaleString()} {property.areaUnit || 'sqft'}</span>
-                  </div>
-                </div>
-
-                {/* Year Built */}
-                {property.yearBuilt && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Year Built</span>
-                      <span className="text-sm font-bold text-foreground">{property.yearBuilt}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Parking Spaces */}
-                {property.parkingSpaces !== undefined && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                      <Car className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Parking</span>
-                      <span className="text-sm font-bold text-foreground">{property.parkingSpaces > 0 ? `${property.parkingSpaces} Spaces` : 'No Reserved'}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Status */}
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Listing Status</span>
-                    <span className="text-sm font-bold text-foreground capitalize">{property.status}</span>
-                  </div>
-                </div>
-
-              </div>
-            </section>
-
-            {/* Description */}
-            <section className="text-left">
-              <h2 className="text-xl font-bold text-foreground mb-4">Description</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                {property.description}
-              </p>
-            </section>
-
-            {/* Amenities Grid */}
-            <section className="text-left">
-              <h2 className="text-xl font-bold text-foreground mb-4">Amenities</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {property.amenities.map((amenity) => (
-                  <div key={amenity.id} className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-card/25 hover:bg-card/45 transition-colors">
-                    {renderAmenityIcon(amenity.icon)}
-                    <span className="text-xs font-semibold text-foreground">{amenity.name}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <PropertySpecs property={property} />
 
             {/* Map Location */}
             {property.location.coordinates && (
@@ -258,7 +94,16 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
                   </Avatar>
                   <div className="flex flex-col">
                     <h3 className="font-bold text-foreground">{property.agent.name}</h3>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                    {property.agent.isVerified && property.agent.role && (
+                      <Badge className={`w-fit mt-1 border-none font-bold text-[9px] uppercase tracking-wider ${
+                        property.agent.role === 'owner' 
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      }`}>
+                        {property.agent.role === 'owner' ? 'Verified Owner' : 'Verified Broker'}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       <Star className="h-3.5 w-3.5 fill-amber-400 stroke-amber-400" />
                       <strong>{property.agent.rating || 4.8}</strong> Rating
                     </span>

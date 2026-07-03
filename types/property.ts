@@ -24,6 +24,8 @@ export interface Agent {
   phone: string;
   image?: string;
   rating?: number;
+  role?: 'owner' | 'broker';
+  isVerified?: boolean;
 }
 
 export type PropertyType = 'apartment' | 'house' | 'condo' | 'townhouse' | 'land' | 'commercial';
@@ -52,4 +54,7 @@ export interface Property {
   agent: Agent;
   yearBuilt?: number;
   parkingSpaces?: number;
+  floor?: number;
+  totalFloors?: number;
+  furnishingStatus?: 'Unfurnished' | 'Semi-Furnished' | 'Furnished';
 }
