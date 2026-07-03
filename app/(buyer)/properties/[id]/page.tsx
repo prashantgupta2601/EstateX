@@ -5,6 +5,7 @@ import { mockProperties } from '@/lib/mock-data/properties';
 import ImageGallery from '@/components/property/image-gallery';
 import PropertySpecs from '@/components/property/property-specs';
 import SellerContactCard from '@/components/property/seller-contact-card';
+import PriceTrends from '@/components/property/price-trends';
 import PropertyCard from '@/components/property/property-card';
 import PropertyDetailsActions from '@/components/property/property-details-actions';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,9 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
             <div className="block lg:hidden">
               <SellerContactCard property={property} />
             </div>
+
+            {/* Locality Price Trends section */}
+            <PriceTrends address={property.location.address} city={property.location.city} />
 
             {/* Map Location */}
             {property.location.coordinates && (
