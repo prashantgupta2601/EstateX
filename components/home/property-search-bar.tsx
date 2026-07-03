@@ -25,7 +25,7 @@ export default function PropertySearchBar() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (purpose) params.set('purpose', purpose);
-    if (location.trim()) params.set('location', location.trim());
+    if (location.trim()) params.set('city', location.trim());
     if (propertyType) params.set('type', propertyType.toLowerCase());
     router.push(`/properties?${params.toString()}`);
   };

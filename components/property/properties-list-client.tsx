@@ -136,25 +136,53 @@ export default function PropertiesListClient() {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Derive sortBy from URL parameter (e.g. ?sort=price_asc)
+  const sortByParam = searchParams.get('sort');
+  const sortBy = useMemo((): SortOption => {
+    if (!sortByParam) return 'relevance';
+    const p = sortByParam.replace('_', '-');
+    if (['relevance', 'price-asc', 'price-desc', 'newest', 'area-desc'].includes(p)) {
+      return p as SortOption;
+    }
+    return 'relevance';
+  }, [sortByParam]);
+
   // --- 1. Parse URL Query Parameters to Derive State ---
   const purpose = (searchParams.get('purpose') || 'any') as 'buy' | 'rent' | 'commercial' | 'any';
-  const location = searchParams.get('location') || searchParams.get('city') || '';
+  const location = searchParams.get('city') || searchParams.get('location') || '';
 
   const isRent = purpose === 'rent';
   const MIN_PRICE = isRent ? 5000 : 1000000;
   const MAX_PRICE = isRent ? 300000 : 50000000;
 
-  const priceMin = searchParams.get('priceMin') ? parseInt(searchParams.get('priceMin')!, 10) : MIN_PRICE;
-  const priceMax = searchParams.get('priceMax') ? parseInt(searchParams.get('priceMax')!, 10) : MAX_PRICE;
+  const priceMin = searchParams.get('minPrice') 
+    ? parseInt(searchParams.get('minPrice')!, 10) 
+    : searchParams.get('priceMin') 
+      ? parseInt(searchParams.get('priceMin')!, 10) 
+      : MIN_PRICE;
+
+  const priceMax = searchParams.get('maxPrice') 
+    ? parseInt(searchParams.get('maxPrice')!, 10) 
+    : searchParams.get('priceMax') 
+      ? parseInt(searchParams.get('priceMax')!, 10) 
+      : MAX_PRICE;
 
   const typeParam = searchParams.get('type');
   const bhkParam = searchParams.get('bhk');
   const amenitiesParam = searchParams.get('amenities');
-  const furnishing = searchParams.get('furnishing') || 'Any';
+  
+  const furnishedParam = searchParams.get('furnished') || searchParams.get('furnishing');
+  const furnishing = useMemo(() => {
+    if (!furnishedParam) return 'Any';
+    const p = furnishedParam.toLowerCase();
+    if (p === 'furnished') return 'Furnished';
+    if (p === 'semi-furnished' || p === 'semi_furnished') return 'Semi-Furnished';
+    if (p === 'unfurnished') return 'Unfurnished';
+    return 'Any';
+  }, [furnishedParam]);
 
   // Advanced search parameters
   const postedBy = searchParams.get('postedBy') || 'any';
@@ -232,9 +260,9 @@ export default function PropertiesListClient() {
       params.set('purpose', newFilters.purpose);
     }
 
-    // 2. Location
+    // 2. Location (City)
     if (newFilters.location.trim()) {
-      params.set('location', newFilters.location.trim());
+      params.set('city', newFilters.location.trim());
     }
 
     // 3. Price Range (only append if different from the default limits based on purpose)
@@ -243,10 +271,10 @@ export default function PropertiesListClient() {
     const defMax = targetRent ? 300000 : 50000000;
 
     if (newFilters.priceRange[0] !== defMin) {
-      params.set('priceMin', newFilters.priceRange[0].toString());
+      params.set('minPrice', newFilters.priceRange[0].toString());
     }
     if (newFilters.priceRange[1] !== defMax) {
-      params.set('priceMax', newFilters.priceRange[1].toString());
+      params.set('maxPrice', newFilters.priceRange[1].toString());
     }
 
     // 4. Property Types
@@ -266,7 +294,7 @@ export default function PropertiesListClient() {
 
     // 7. Furnishing
     if (newFilters.furnishing && newFilters.furnishing !== 'Any') {
-      params.set('furnishing', newFilters.furnishing);
+      params.set('furnished', newFilters.furnishing.toLowerCase());
     }
 
     // 8. Posted By
@@ -304,17 +332,26 @@ export default function PropertiesListClient() {
       params.set('availableFrom', newFilters.availableFrom);
     }
 
+    // 15. Preserve Sort
+    const currentSort = searchParams.get('sort');
+    if (currentSort) {
+      params.set('sort', currentSort);
+    }
+
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, router]);
+  }, [pathname, router, searchParams]);
 
   // Specific Handlers
   const handleSortChange = (val: SortOption) => {
     setCurrentPage(1);
-    setSortBy(val);
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
     }, 400);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort', val.replace('-', '_'));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
