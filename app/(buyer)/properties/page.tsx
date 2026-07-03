@@ -3,10 +3,33 @@ import { Metadata } from 'next';
 import PropertiesListClient from '@/components/property/properties-list-client';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const metadata: Metadata = {
-  title: 'Properties Listing | EstateX',
-  description: 'Browse all verified and premium residential and commercial properties on EstateX.',
-};
+interface Props {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const resolvedParams = await searchParams;
+  const purpose = resolvedParams.purpose;
+
+  let title = 'Premium Properties in India | EstateX';
+  let description = 'Browse verified and premium residential and commercial properties on EstateX.';
+
+  if (purpose === 'buy') {
+    title = 'Properties for Sale in India | EstateX';
+    description = 'Explore premium homes, apartments, and villas for sale in India. Verified listings on EstateX.';
+  } else if (purpose === 'rent') {
+    title = 'Properties for Rent in India | EstateX';
+    description = 'Find luxury flats, apartments, and commercial spaces for rent in India. Verified listings on EstateX.';
+  } else if (purpose === 'commercial') {
+    title = 'Commercial Real Estate in India | EstateX';
+    description = 'Browse premium offices, retail spaces, and land for business on EstateX.';
+  }
+
+  return {
+    title,
+    description,
+  };
+}
 
 function PropertiesListFallback() {
   return (

@@ -6,10 +6,12 @@ import dynamic from 'next/dynamic';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
+import EmptyState from '@/components/property/empty-state';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SlidersHorizontal, X, LayoutGrid, List, Map, ArrowUpDown } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SlidersHorizontal, X, LayoutGrid, List, Map, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
 import {
   Select,
@@ -38,6 +40,45 @@ const PropertyMap = dynamic(
   }
 );
 
+// Helper Skeleton components for loading simulation
+function PropertyCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 border border-border/40 rounded-2xl p-4 bg-card/20 animate-pulse h-full">
+      <Skeleton className="h-48 w-full rounded-xl" />
+      <div className="flex flex-col gap-2.5 mt-2">
+        <Skeleton className="h-5 w-1/3 rounded-md" />
+        <Skeleton className="h-6 w-5/6 rounded-md" />
+        <Skeleton className="h-4 w-2/3 rounded-md" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 py-3 border-y border-border/40 my-4">
+        <Skeleton className="h-4 w-5/6 rounded-md" />
+        <Skeleton className="h-4 w-3/4 rounded-md" />
+      </div>
+      <Skeleton className="h-9 w-full rounded-xl mt-auto" />
+    </div>
+  );
+}
+
+function PropertyCardListSkeleton() {
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 border border-border/40 rounded-2xl p-4 bg-card/20 animate-pulse">
+      <Skeleton className="h-48 sm:h-40 w-full sm:w-72 md:w-80 rounded-xl shrink-0" />
+      <div className="flex-1 flex flex-col justify-between py-1 gap-3">
+        <div className="flex flex-col gap-2.5">
+          <Skeleton className="h-6 w-24 rounded-md" />
+          <Skeleton className="h-5 w-48 rounded-md" />
+          <Skeleton className="h-4 w-36 rounded-md" />
+          <Skeleton className="h-4 w-full rounded-md" />
+        </div>
+        <div className="flex justify-between items-center pt-3 border-t border-border/40">
+          <Skeleton className="h-5 w-28 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'area-desc';
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -49,6 +90,8 @@ export default function PropertiesListClient() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   // --- 1. Parse URL Query Parameters to Derive State ---
   const purpose = (searchParams.get('purpose') || 'any') as 'buy' | 'rent' | 'commercial' | 'any';
@@ -94,6 +137,12 @@ export default function PropertiesListClient() {
 
   // --- 2. Centralized URL Navigation Handler ---
   const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setCurrentPage(1);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 400);
+
     const params = new URLSearchParams();
 
     // 1. Purpose
@@ -143,7 +192,12 @@ export default function PropertiesListClient() {
 
   // Specific Handlers
   const handleSortChange = (val: SortOption) => {
+    setCurrentPage(1);
     setSortBy(val);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 400);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -298,6 +352,68 @@ export default function PropertiesListClient() {
       filters.furnishing !== 'Any'
     );
   }, [filters, isPriceFilterActive]);
+
+  // --- Pagination Logic ---
+  const ITEMS_PER_PAGE = 9;
+  const totalPages = Math.ceil(sortedProperties.length / ITEMS_PER_PAGE);
+
+  const paginatedProperties = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedProperties.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedProperties, currentPage]);
+
+  // Pagination UI Component
+  const renderPagination = () => {
+    if (totalPages <= 1 || viewMode === 'map') return null;
+
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span>Previous</span>
+        </Button>
+
+        {pages.map((p) => {
+          const isActive = currentPage === p;
+          return (
+            <Button
+              key={p}
+              variant={isActive ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentPage(p)}
+              className={`w-9 h-9 rounded-xl font-bold cursor-pointer ${
+                isActive ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {p}
+            </Button>
+          );
+        })}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
+        >
+          <span>Next</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  };
 
   // Chip removal handlers
   const removePriceFilter = () => handleFilterChange({ ...filters, priceRange: [MIN_PRICE, MAX_PRICE] });
@@ -557,41 +673,50 @@ export default function PropertiesListClient() {
         </aside>
 
         {/* Right Main Grid/List Area */}
-        <div className="flex-1">
-          {sortedProperties.length > 0 ? (
+        <div className="flex-1 flex flex-col gap-6">
+          {isLoading ? (
             viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedProperties.map((property) => (
-                  <div key={property.id} className="h-full">
-                    <PropertyCard property={property} />
-                  </div>
+                {[...Array(6)].map((_, i) => (
+                  <PropertyCardSkeleton key={i} />
                 ))}
               </div>
             ) : viewMode === 'list' ? (
               <div className="flex flex-col gap-5">
-                {sortedProperties.map((property) => (
-                  <PropertyCardList key={property.id} property={property} />
+                {[...Array(5)].map((_, i) => (
+                  <PropertyCardListSkeleton key={i} />
                 ))}
               </div>
             ) : (
-              <PropertyMap properties={sortedProperties} />
-            )
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border/85 rounded-3xl bg-card/25 min-h-[400px]">
-              <div className="p-4.5 rounded-full bg-primary/10 text-primary mb-5">
-                <SlidersHorizontal className="h-8 w-8 stroke-[2.5]" />
+              <div className="w-full h-[600px] rounded-3xl border border-border/80 bg-card/25 flex items-center justify-center animate-pulse">
+                <span className="text-sm font-semibold text-muted-foreground animate-bounce">Loading Map View...</span>
               </div>
-              <h3 className="text-xl font-bold text-foreground">No Properties Found</h3>
-              <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-                No listings match your search options. Try widening your price range, reducing amenities, or resetting filters.
-              </p>
-              <Button
-                onClick={clearAllFilters}
-                className="mt-6 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 shadow-md cursor-pointer"
-              >
-                Clear All Filters
-              </Button>
-            </div>
+            )
+          ) : sortedProperties.length > 0 ? (
+            <>
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+                  {paginatedProperties.map((property) => (
+                    <div key={property.id} className="h-full">
+                      <PropertyCard property={property} />
+                    </div>
+                  ))}
+                </div>
+              ) : viewMode === 'list' ? (
+                <div className="flex flex-col gap-5 animate-fade-in">
+                  {paginatedProperties.map((property) => (
+                    <PropertyCardList key={property.id} property={property} />
+                  ))}
+                </div>
+              ) : (
+                <div className="animate-fade-in">
+                  <PropertyMap properties={sortedProperties} />
+                </div>
+              )}
+              {renderPagination()}
+            </>
+          ) : (
+            <EmptyState onClearFilters={clearAllFilters} />
           )}
         </div>
       </div>
