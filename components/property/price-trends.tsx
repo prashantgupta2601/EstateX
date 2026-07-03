@@ -114,7 +114,7 @@ export default function PriceTrends({ address, city }: PriceTrendsProps) {
                 color: 'hsl(var(--foreground))',
                 boxShadow: 'var(--shadow-md)'
               }}
-              formatter={(value: any) => [formatPrice(Number(value || 0)), 'Price/sqft']}
+              formatter={(value) => [formatPrice(Number(value || 0)), 'Price/sqft']}
               labelStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginBottom: '4px' }}
             />
             <Line 

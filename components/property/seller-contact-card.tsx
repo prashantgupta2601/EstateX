@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import EnquiryForm from '@/components/property/enquiry-form';
-import { Phone, Send, Calendar, Star, Mail, ShieldCheck } from 'lucide-react';
+import { Phone, Send, Calendar, Star, Mail, ShieldCheck, FileDown } from 'lucide-react';
 
 interface SellerContactCardProps {
   property: Property;
@@ -23,6 +23,30 @@ interface SellerContactCardProps {
 export default function SellerContactCard({ property }: SellerContactCardProps) {
   const [isPhoneRevealed, setIsPhoneRevealed] = useState(false);
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadBrochure = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`/api/brochure/${property.id}`);
+      if (!response.ok) throw new Error('Failed to download brochure');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `brochure-${property.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast("Brochure PDF downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to download brochure. Please try again.", "error");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const handleContactClick = () => {
     if (!isPhoneRevealed) {
@@ -151,6 +175,26 @@ export default function SellerContactCard({ property }: SellerContactCardProps) 
         >
           <Calendar className="h-4 w-4" />
           <span>Schedule Visit</span>
+        </Button>
+
+        {/* Download Brochure button */}
+        <Button 
+          variant="outline"
+          onClick={handleDownloadBrochure}
+          disabled={isDownloading}
+          className="w-full h-11 rounded-2xl border border-primary/40 text-primary hover:bg-primary/5 hover:text-primary font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer text-sm disabled:opacity-75"
+        >
+          {isDownloading ? (
+            <>
+              <span className="h-4 w-4 border-2 border-primary/35 border-t-primary rounded-full animate-spin" />
+              <span>Downloading...</span>
+            </>
+          ) : (
+            <>
+              <FileDown className="h-4 w-4" />
+              <span>Download Brochure</span>
+            </>
+          )}
         </Button>
       </div>
 

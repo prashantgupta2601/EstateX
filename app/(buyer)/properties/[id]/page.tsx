@@ -10,7 +10,7 @@ import PropertyCard from '@/components/property/property-card';
 import PropertyDetailsActions from '@/components/property/property-details-actions';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import SinglePropertyMapWrapper from '@/components/property/single-property-map-wrapper';
+import NearbyMapWrapper from '@/components/property/nearby-map-wrapper';
 
 interface PropertyDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -64,17 +64,13 @@ export default async function PropertyDetailsPage({ params }: PropertyDetailsPag
             {/* Locality Price Trends section */}
             <PriceTrends address={property.location.address} city={property.location.city} />
 
-            {/* Map Location */}
+            {/* Nearby Places Map */}
             {property.location.coordinates && (
-              <section className="text-left flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-foreground">Location Map</h2>
-                <SinglePropertyMapWrapper 
-                  lat={property.location.coordinates.lat} 
-                  lng={property.location.coordinates.lng} 
-                  title={property.title} 
-                  address={property.location.address}
-                />
-              </section>
+              <NearbyMapWrapper 
+                lat={property.location.coordinates.lat} 
+                lng={property.location.coordinates.lng} 
+                title={property.title} 
+              />
             )}
 
           </div>
