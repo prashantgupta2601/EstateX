@@ -1,15 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { X, GitCompare, ArrowLeft, Check, Minus, ShieldCheck, ExternalLink } from 'lucide-react';
-import { useEstate } from '@/lib/context/estate-context';
+import { useComparison } from '@/lib/hooks/use-comparison';
 import { Button } from '@/components/ui/button';
 import { Property } from '@/types/property';
+import { mockProperties } from '@/lib/mock-data/properties';
 
 export default function ComparePage() {
-  const { compareList, removeFromCompare, clearCompare, isMounted } = useEstate();
+  const { comparison, removeFromCompare, clearComparison, isMounted } = useComparison();
+
+  const compareList = useMemo(() => {
+    return mockProperties.filter((property) => comparison.includes(property.id));
+  }, [comparison]);
 
   const formatPrice = (price: number, type: 'sale' | 'rent') => {
     let formatted = '';
@@ -118,8 +123,8 @@ export default function ComparePage() {
                 </Button>
               </Link>
               <button
-                onClick={clearCompare}
-                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+                onClick={clearComparison}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 cursor-pointer"
               >
                 Clear comparison list
               </button>
@@ -176,7 +181,11 @@ export default function ComparePage() {
     );
   }
 
-  // State 3: 2 or 3 properties selected (Renders comparison table)
+  // Determine width classes dynamically based on total columns
+  // 1 specs column + up to 4 property columns + up to 1 dummy column
+  const colWidthClass = compareList.length >= 3 ? 'w-1/5' : 'w-1/4';
+
+  // State 3: 2, 3, or 4 properties selected (Renders comparison table)
   return (
     <div className="mx-auto max-w-7xl w-full px-4 py-8 md:py-12 flex flex-col gap-6 text-left animate-fade-in">
       
@@ -195,7 +204,7 @@ export default function ComparePage() {
           </Link>
           <Button
             variant="ghost"
-            onClick={clearCompare}
+            onClick={clearComparison}
             className="text-xs font-bold text-muted-foreground hover:text-red-500 cursor-pointer h-10 px-3 rounded-xl hover:bg-red-500/5 transition-colors"
           >
             Clear All
@@ -209,13 +218,13 @@ export default function ComparePage() {
           <thead>
             <tr className="border-b border-border/60 bg-muted/20">
               {/* Row Header column */}
-              <th className="p-5 font-bold text-sm text-muted-foreground w-1/4 align-top">
+              <th className={`p-5 font-bold text-sm text-muted-foreground ${colWidthClass} align-top`}>
                 Property Specs
               </th>
               
               {/* Property columns */}
               {compareList.map((property) => (
-                <th key={property.id} className="p-5 font-bold text-foreground w-1/4 align-top border-l border-border/40 relative">
+                <th key={property.id} className={`p-5 font-bold text-foreground ${colWidthClass} align-top border-l border-border/40 relative`}>
                   {/* Remove Column button */}
                   <button
                     onClick={() => removeFromCompare(property.id)}
@@ -254,9 +263,9 @@ export default function ComparePage() {
                 </th>
               ))}
 
-              {/* Dummy Column if less than 3 properties, to prompt selection */}
-              {compareList.length < 3 && (
-                <th className="p-5 font-bold text-foreground w-1/4 align-top border-l border-border/40 bg-muted/5">
+              {/* Dummy Column if less than 4 properties, to prompt selection */}
+              {compareList.length < 4 && (
+                <th className={`p-5 font-bold text-foreground ${colWidthClass} align-top border-l border-border/40 bg-muted/5`}>
                   <div className="flex flex-col items-center justify-center h-full min-h-[140px] border-2 border-dashed border-border/60 rounded-2xl p-4 text-center">
                     <span className="text-xs font-bold text-muted-foreground block mb-2">Compare Another?</span>
                     <Link href="/properties">
@@ -279,7 +288,7 @@ export default function ComparePage() {
                   {formatPrice(property.price, property.type)}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Location */}
@@ -290,7 +299,7 @@ export default function ComparePage() {
                   {property.location.address}, {property.location.city}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Property Type */}
@@ -301,7 +310,7 @@ export default function ComparePage() {
                   {property.propertyType}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Purpose */}
@@ -316,7 +325,7 @@ export default function ComparePage() {
                   </span>
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* BHK / Bedrooms */}
@@ -327,7 +336,7 @@ export default function ComparePage() {
                   {property.bedrooms > 0 ? `${property.bedrooms} BHK` : 'N/A'}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Bathrooms */}
@@ -338,7 +347,7 @@ export default function ComparePage() {
                   {property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Super Area */}
@@ -349,7 +358,7 @@ export default function ComparePage() {
                   {property.area.toLocaleString()} {property.areaUnit || 'sqft'}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Furnishing */}
@@ -360,7 +369,7 @@ export default function ComparePage() {
                   {getFurnishingStatus(property.description)}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Year Built */}
@@ -371,7 +380,7 @@ export default function ComparePage() {
                   {property.yearBuilt || 'N/A'}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Parking */}
@@ -384,7 +393,7 @@ export default function ComparePage() {
                     : 'No Reserved'}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Verified Status */}
@@ -404,7 +413,7 @@ export default function ComparePage() {
                   )}
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
 
             {/* Popular Amenities Rows */}
@@ -427,7 +436,7 @@ export default function ComparePage() {
                     </td>
                   );
                 })}
-                {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+                {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
               </tr>
             ))}
 
@@ -453,7 +462,7 @@ export default function ComparePage() {
                   </div>
                 </td>
               ))}
-              {compareList.length < 3 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
+              {compareList.length < 4 && <td className="p-4 border-l border-border/40 bg-muted/5" />}
             </tr>
           </tbody>
         </table>

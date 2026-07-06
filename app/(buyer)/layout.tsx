@@ -1,5 +1,5 @@
 import React from 'react';
-import CompareDrawer from '@/components/property/compare-drawer';
+import ComparisonBar from '@/components/property/comparison-bar';
 import { Toaster } from '@/components/ui/toast';
 
 export default function BuyerLayout({
@@ -10,7 +10,7 @@ export default function BuyerLayout({
   return (
     <>
       {children}
-      <CompareDrawer />
+      <ComparisonBar />
       <Toaster />
     </>
   );

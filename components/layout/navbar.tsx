@@ -12,11 +12,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useEstate } from '@/lib/context/estate-context';
+import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
 
 export default function Navbar() {
-  const { compareList, isMounted } = useEstate();
+  const { comparison, isMounted } = useComparison();
   const { wishlist } = useWishlist();
 
   const navLinks = [
@@ -24,7 +24,7 @@ export default function Navbar() {
     { label: 'Rent', href: '/properties?purpose=rent' },
     { label: 'Commercial', href: '/properties?purpose=commercial' },
     { 
-      label: isMounted && compareList.length > 0 ? `Compare (${compareList.length})` : 'Compare', 
+      label: isMounted && comparison.length > 0 ? `Compare (${comparison.length})` : 'Compare', 
       href: '/compare' 
     },
     { label: 'EMI Calculator', href: '/emi-calculator' },

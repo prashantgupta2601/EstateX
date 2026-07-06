@@ -7,14 +7,16 @@ import { Heart, MapPin, Bed, Maximize, ShieldCheck, Calendar, GitCompare } from 
 import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useEstate } from '@/lib/context/estate-context';
+import { useComparison } from '@/lib/hooks/use-comparison';
+import { useWishlist } from '@/lib/hooks/use-wishlist';
 
 interface PropertyCardListProps {
   property: Property;
 }
 
 export default function PropertyCardList({ property }: PropertyCardListProps) {
-  const { toggleWishlist, isInWishlist, addToCompare, removeFromCompare, isInCompare, isMounted } = useEstate();
+  const { addToCompare, removeFromCompare, isInCompare, isMounted } = useComparison();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const isWishlisted = isMounted ? isInWishlist(property.id) : false;
   const isCompared = isMounted ? isInCompare(property.id) : false;
 
@@ -37,7 +39,11 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
   });
 
   return (
-    <div className="group flex flex-col sm:flex-row rounded-2xl border border-border/60 bg-card text-card-foreground shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <div className={`group flex flex-col sm:flex-row rounded-2xl border bg-card text-card-foreground shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden ${
+      isCompared
+        ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.01]'
+        : 'border-border/60'
+    }`}>
       {/* Image Section */}
       <div className="relative w-full sm:w-72 md:w-80 shrink-0 aspect-video sm:aspect-auto sm:min-h-[220px] overflow-hidden bg-muted">
         {property.images?.[0] ? (
@@ -78,10 +84,7 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
                 if (isCompared) {
                   removeFromCompare(property.id);
                 } else {
-                  const res = addToCompare(property);
-                  if (!res.success) {
-                    alert(res.message);
-                  }
+                  addToCompare(property.id);
                 }
               }}
               className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
@@ -99,7 +102,11 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleWishlist(property.id);
+                if (isWishlisted) {
+                  removeFromWishlist(property.id);
+                } else {
+                  addToWishlist(property.id);
+                }
               }}
               className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
                 isWishlisted
@@ -169,15 +176,35 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
             </div>
           </div>
 
-          <Link href={`/properties/${property.id}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl font-semibold border-primary/20 text-primary hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors"
-            >
-              View Details
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3.5">
+            {/* Compare Checkbox */}
+            <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer select-none py-1.5">
+              <input
+                type="checkbox"
+                checked={isCompared}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  if (isCompared) {
+                    removeFromCompare(property.id);
+                  } else {
+                    addToCompare(property.id);
+                  }
+                }}
+                className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer accent-primary"
+              />
+              <span>Compare</span>
+            </label>
+
+            <Link href={`/properties/${property.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl font-semibold border-primary/20 text-primary hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors"
+              >
+                View Details
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

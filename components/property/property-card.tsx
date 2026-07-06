@@ -7,7 +7,7 @@ import { Heart, MapPin, Bed, Maximize, ShieldCheck, GitCompare } from 'lucide-re
 import { Property } from '@/types/property';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useEstate } from '@/lib/context/estate-context';
+import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
 import { toast } from '@/components/ui/toast';
 
@@ -16,7 +16,7 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
-  const { addToCompare, removeFromCompare, isInCompare, isMounted } = useEstate();
+  const { addToCompare, removeFromCompare, isInCompare, isMounted } = useComparison();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   
   const isWishlisted = isMounted ? isInWishlist(property.id) : false;
@@ -37,7 +37,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <div className="group flex flex-col h-full rounded-2xl border border-border/60 bg-card text-card-foreground shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <div className={`group flex flex-col h-full rounded-2xl border bg-card text-card-foreground shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden ${
+      isCompared
+        ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.01]'
+        : 'border-border/60'
+    }`}>
       {/* Image & Badge Overlay */}
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {property.images?.[0] ? (
@@ -79,10 +83,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 if (isCompared) {
                   removeFromCompare(property.id);
                 } else {
-                  const res = addToCompare(property);
-                  if (!res.success) {
-                    alert(res.message);
-                  }
+                  addToCompare(property.id);
                 }
               }}
               className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
@@ -178,6 +179,26 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             View Details
           </Button>
         </Link>
+
+        {/* Compare Checkbox */}
+        <div className="mt-3 flex items-center justify-center border-t border-border/30 pt-3">
+          <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer select-none py-0.5">
+            <input
+              type="checkbox"
+              checked={isCompared}
+              onChange={(e) => {
+                e.stopPropagation();
+                if (isCompared) {
+                  removeFromCompare(property.id);
+                } else {
+                  addToCompare(property.id);
+                }
+              }}
+              className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer accent-primary"
+            />
+            <span>Compare Property</span>
+          </label>
+        </div>
       </div>
     </div>
   );
