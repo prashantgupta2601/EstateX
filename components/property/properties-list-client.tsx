@@ -813,8 +813,8 @@ export default function PropertiesListClient() {
                 {(() => {
                   const activeAdvancedCount = getActiveAdvancedFiltersCount(filters);
                   return activeAdvancedCount > 0 ? (
-                    <span className="bg-primary text-primary-foreground text-[10px] font-black h-5 px-1.5 flex items-center justify-center rounded-full shadow-md">
-                      +{activeAdvancedCount}
+                    <span className="bg-primary text-primary-foreground text-[9px] font-black h-5 px-2 flex items-center justify-center rounded-full shadow-xs shrink-0 ml-1">
+                      +{activeAdvancedCount} filters active
                     </span>
                   ) : null;
                 })()}
