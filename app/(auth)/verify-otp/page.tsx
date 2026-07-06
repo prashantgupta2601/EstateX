@@ -1,121 +1,85 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, KeyRound, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
+import OtpInput from '@/components/ui/otp-input';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
-  const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
+  
+  // State
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [secondsLeft, setSecondsLeft] = useState(30);
 
-  // Focus the first box on mount
+  // Countdown timer for Resend button
   useEffect(() => {
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
-    }
-  }, []);
-
-  const handleChange = (element: HTMLInputElement, index: number) => {
-    const value = element.value.replace(/[^0-9]/g, '');
-    if (!value) return;
-
-    const newOtp = [...otp];
-    // Take only the last character if paste/multi-character entry occurs
-    newOtp[index] = value[value.length - 1];
-    setOtp(newOtp);
-    setError(null);
-
-    // Auto-focus next input box
-    if (value && index < 5 && inputRefs.current[index + 1]) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Backspace') {
-      const newOtp = [...otp];
-      
-      // If current box is empty, clear the previous box and focus it
-      if (!otp[index] && index > 0 && inputRefs.current[index - 1]) {
-        newOtp[index - 1] = '';
-        setOtp(newOtp);
-        inputRefs.current[index - 1]?.focus();
-      } else {
-        // Just clear current box
-        newOtp[index] = '';
-        setOtp(newOtp);
-      }
-      setError(null);
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+    if (secondsLeft === 0) return;
     
-    if (pasteData.length === 6) {
-      const newOtp = pasteData.split('');
-      setOtp(newOtp);
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [secondsLeft]);
+
+  // Performs actual validation check
+  const handleVerify = (otpCode: string) => {
+    if (otpCode.length < 6) {
+      setError('Please enter the complete 6-digit OTP code');
+      return;
+    }
+
+    if (otpCode === '123456') {
       setError(null);
-      // Focus last box
-      inputRefs.current[5]?.focus();
+      toast('Phone number verified successfully');
+      router.push('/');
+    } else {
+      setError('Invalid OTP, please try again.');
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const otpCode = otp.join('');
-    
-    if (otpCode.length < 6) {
-      setError('Please enter the complete 6-digit OTP code sent to your phone');
-      return;
-    }
-
-    console.log('OTP Verified successfully:', otpCode);
-    toast('Account verified successfully (mock)');
-    router.push('/properties');
+    handleVerify(otp);
   };
 
   const handleResend = () => {
-    toast('A new 6-digit OTP has been sent (mock)');
-    setOtp(new Array(6).fill(''));
+    toast('A new 6-digit OTP has been sent');
+    setOtp('');
     setError(null);
-    inputRefs.current[0]?.focus();
+    setSecondsLeft(30);
   };
 
   return (
     <div className="flex flex-col gap-6 text-left">
+      
+      {/* Page Header */}
       <div className="text-center">
-        <h2 className="text-xl font-black text-foreground">Verify OTP</h2>
-        <p className="text-xs text-muted-foreground mt-1 font-medium">
-          We sent a 6-digit verification code to your registered mobile number.
+        <h2 className="text-xl font-black text-foreground">Verify Your Phone Number</h2>
+        <p className="text-xs text-muted-foreground mt-1.5 font-medium leading-relaxed">
+          Enter the 6-digit OTP sent to <strong className="text-foreground">+91 XXXXXX1234</strong>
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         
-        {/* OTP Input Boxes Grid */}
+        {/* Reusable OTP Input boxes (triggers auto-verify immediately on complete) */}
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center gap-2 max-w-sm mx-auto w-full">
-            {otp.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={(el) => { inputRefs.current[idx] = el; }}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(e.target, idx)}
-                onKeyDown={(e) => handleKeyDown(e, idx)}
-                onPaste={handlePaste}
-                className="h-12 w-12 text-center text-lg font-black rounded-xl border border-border/80 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all uppercase outline-hidden"
-              />
-            ))}
-          </div>
+          <OtpInput
+            value={otp}
+            onChange={(val) => {
+              setOtp(val);
+              if (error) setError(null);
+            }}
+            onComplete={handleVerify}
+            length={6}
+            disabled={false}
+          />
           {error && (
             <p className="text-[10px] text-destructive font-semibold flex items-center gap-1 justify-center mt-1">
               <AlertCircle className="h-3.5 w-3.5" />
@@ -124,39 +88,50 @@ export default function VerifyOtpPage() {
           )}
         </div>
 
-        {/* Submit */}
+        {/* Resend Action with Countdown Timer */}
+        <div className="text-center select-none">
+          {secondsLeft > 0 ? (
+            <button
+              type="button"
+              disabled
+              className="text-xs text-muted-foreground font-semibold cursor-not-allowed opacity-80"
+            >
+              Resend OTP in {secondsLeft}s
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResend}
+              className="text-xs text-primary hover:underline font-bold cursor-pointer transition-colors"
+            >
+              Resend OTP
+            </button>
+          )}
+        </div>
+
+        {/* Submit / Verification Button */}
         <Button 
           type="submit" 
-          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-2 text-sm flex items-center justify-center gap-1.5"
+          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-1 text-sm flex items-center justify-center gap-1.5"
         >
           <KeyRound className="h-4 w-4" />
-          <span>Verify & Register</span>
+          <span>Verify Code</span>
         </Button>
       </form>
 
-      {/* Resend Action */}
-      <div className="text-center mt-2 flex flex-col gap-4">
-        <p className="text-xs text-muted-foreground font-semibold">
-          Didn&apos;t receive the code?{' '}
-          <button 
-            type="button" 
-            onClick={handleResend}
-            className="text-primary hover:underline font-bold cursor-pointer"
-          >
-            Resend OTP
-          </button>
-        </p>
-        
-        <div className="h-px bg-border/60" />
+      {/* Redirection */}
+      <div className="text-center mt-2 flex flex-col items-center">
+        <div className="h-px bg-border/60 w-full mb-4" />
         
         <Link 
           href="/signup" 
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-bold self-center transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-bold transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to Registration</span>
+          <span>Change Phone Number</span>
         </Link>
       </div>
+
     </div>
   );
 }
