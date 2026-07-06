@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
+import { toast } from '@/components/ui/toast';
 
 interface PropertyCardListProps {
   property: Property;
@@ -104,8 +105,10 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
                 e.stopPropagation();
                 if (isWishlisted) {
                   removeFromWishlist(property.id);
+                  toast('Removed from Wishlist');
                 } else {
                   addToWishlist(property.id);
+                  toast('Added to Wishlist');
                 }
               }}
               className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
