@@ -9,13 +9,23 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { formatIndianCurrencyShort } from '@/lib/utils/emi-calculator';
-import { mockSavedSearches, SavedSearch } from '@/lib/mock-data/saved-searches';
+import { getSavedSearches, SavedSearch } from '@/lib/mock-data/api-simulation';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
 
 export default function SavedSearchesPage() {
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(mockSavedSearches);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchToDelete, setSearchToDelete] = useState<SavedSearch | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    getSavedSearches().then((data) => {
+      setSavedSearches(data);
+      setIsLoading(false);
+    });
+  }, []);
 
   const getFilterSummary = (filters: SavedSearch['filters']) => {
     const parts = [];
@@ -84,7 +94,31 @@ export default function SavedSearchesPage() {
         </p>
       </div>
 
-      {savedSearches.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+          {[...Array(4)].map((_, i) => (
+            <Card 
+              key={i} 
+              className="border-border/80 bg-card/45 backdrop-blur-md rounded-2xl p-5 flex flex-col gap-4"
+            >
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex flex-col gap-2.5 w-full">
+                  <Skeleton className="h-5 w-1/2 rounded-md" />
+                  <Skeleton className="h-4 w-5/6 rounded-md" />
+                </div>
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </div>
+              <div className="flex justify-between items-center mt-auto pt-4 border-t border-border/60">
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-8 rounded-xl" />
+                  <Skeleton className="h-8 w-24 rounded-xl" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : savedSearches.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {savedSearches.map((search) => (
             <Card 

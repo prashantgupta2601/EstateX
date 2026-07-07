@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, use } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { mockProperties } from '@/lib/mock-data/properties';
+import { Property } from '@/types/property';
 import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
 import EmptyState from '@/components/property/empty-state';
@@ -130,7 +130,12 @@ function getDeterministicPropertyDetails(id: string, agentRole: string, floorVal
   };
 }
 
-export default function PropertiesListClient() {
+interface PropertiesListClientProps {
+  propertiesPromise: Promise<Property[]>;
+}
+
+export default function PropertiesListClient({ propertiesPromise }: PropertiesListClientProps) {
+  const properties = use(propertiesPromise);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -392,7 +397,7 @@ export default function PropertiesListClient() {
 
   // --- 3. Compute Live Filtered Properties ---
   const filteredProperties = useMemo(() => {
-    return mockProperties.filter((property) => {
+    return properties.filter((property) => {
       // 1. Purpose filter (Buy vs Rent vs Commercial vs Any)
       if (filters.purpose && filters.purpose !== 'any') {
         if (filters.purpose === 'buy' && property.type !== 'sale') return false;
@@ -537,7 +542,7 @@ export default function PropertiesListClient() {
 
       return true;
     });
-  }, [filters]);
+  }, [filters, properties]);
 
   // Sort the filtered properties
   const sortedProperties = useMemo(() => {

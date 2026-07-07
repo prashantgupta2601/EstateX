@@ -6,25 +6,36 @@ import Image from 'next/image';
 import { MessageSquare, Calendar, ChevronDown, ChevronUp, User, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockEnquiries, Enquiry } from '@/lib/mock-data/enquiries';
+import { getEnquiries, Enquiry } from '@/lib/mock-data/api-simulation';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
 
 export default function EnquiriesPage() {
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'replied' | 'closed'>('all');
   const [expandedEnquiries, setExpandedEnquiries] = useState<Record<string, boolean>>({});
 
-  const tabCounts = useMemo(() => {
-    return {
-      all: mockEnquiries.length,
-      pending: mockEnquiries.filter((e) => e.status === 'pending').length,
-      replied: mockEnquiries.filter((e) => e.status === 'replied').length,
-      closed: mockEnquiries.filter((e) => e.status === 'closed').length,
-    };
+  useEffect(() => {
+    getEnquiries().then((data) => {
+      setEnquiries(data);
+      setIsLoading(false);
+    });
   }, []);
 
+  const tabCounts = useMemo(() => {
+    return {
+      all: enquiries.length,
+      pending: enquiries.filter((e) => e.status === 'pending').length,
+      replied: enquiries.filter((e) => e.status === 'replied').length,
+      closed: enquiries.filter((e) => e.status === 'closed').length,
+    };
+  }, [enquiries]);
+
   const filteredEnquiries = useMemo(() => {
-    if (activeTab === 'all') return mockEnquiries;
-    return mockEnquiries.filter((e) => e.status === activeTab);
-  }, [activeTab]);
+    if (activeTab === 'all') return enquiries;
+    return enquiries.filter((e) => e.status === activeTab);
+  }, [activeTab, enquiries]);
 
   const toggleExpand = (id: string) => {
     setExpandedEnquiries((prev) => ({
@@ -91,7 +102,31 @@ export default function EnquiriesPage() {
       </div>
 
       {/* List Enquiries */}
-      {filteredEnquiries.length > 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col gap-4 animate-pulse">
+          {[...Array(3)].map((_, i) => (
+            <Card 
+              key={i}
+              className="border-border/80 bg-card/45 backdrop-blur-md rounded-2xl overflow-hidden"
+            >
+              <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
+                <Skeleton className="w-full sm:w-28 h-20 rounded-xl shrink-0" />
+                <div className="flex-1 flex flex-col gap-3.5 w-full text-left">
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-5 w-2/3 rounded-md" />
+                    <div className="flex gap-4 mt-1">
+                      <Skeleton className="h-3.5 w-24 rounded-md" />
+                      <Skeleton className="h-3.5 w-28 rounded-md" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
+                <Skeleton className="h-5 w-16 rounded-full shrink-0 self-start" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredEnquiries.length > 0 ? (
         <div className="flex flex-col gap-4">
           {filteredEnquiries.map((enquiry) => {
             const isExpanded = !!expandedEnquiries[enquiry.id];

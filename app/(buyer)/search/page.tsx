@@ -2,6 +2,9 @@ import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import PropertiesListClient from '@/components/property/properties-list-client';
 import { Skeleton } from '@/components/ui/skeleton';
+import FilterSidebarSkeleton from '@/components/skeletons/filter-sidebar-skeleton';
+import PropertyCardSkeleton from '@/components/skeletons/property-card-skeleton';
+import { getProperties } from '@/lib/mock-data/api-simulation';
 
 export const metadata: Metadata = {
   title: 'Search Properties | EstateX',
@@ -10,53 +13,30 @@ export const metadata: Metadata = {
 
 function SearchListFallback() {
   return (
-    <div className="mx-auto max-w-7xl w-full px-4 py-8 md:py-12 flex flex-col gap-6 animate-pulse">
+    <div className="mx-auto max-w-7xl w-full px-4 py-8 md:py-12 flex flex-col gap-6 text-left animate-pulse">
       {/* Header Skeleton */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-border/45 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-border/40 gap-4">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-9 w-60 rounded-xl" />
-          <Skeleton className="h-4 w-36 rounded-lg" />
+          <Skeleton className="h-4 w-36 rounded-lg mt-1" />
         </div>
         <Skeleton className="h-10 w-28 rounded-xl md:self-end" />
       </div>
 
-      {/* Main Skeleton */}
-      <div className="flex gap-8 items-start">
+      {/* Main Skeleton Content */}
+      <div className="flex gap-8 items-start w-full">
         {/* Sidebar Skeleton */}
-        <aside className="w-68 shrink-0 hidden lg:flex flex-col gap-6 p-6 rounded-2xl border border-border/60 bg-card/30">
-          <div className="flex justify-between items-center pb-4 border-b border-border/40">
-            <Skeleton className="h-5 w-28 rounded-lg" />
-            <Skeleton className="h-5 w-12 rounded-lg" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-20 rounded-md" />
-            <Skeleton className="h-8 w-24 rounded-lg" />
-            <Skeleton className="h-6 w-full rounded-lg" />
-          </div>
-          <hr className="border-border/20" />
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 rounded-md" />
-            <Skeleton className="h-5 w-full rounded-md" />
-            <Skeleton className="h-5 w-full rounded-md" />
-            <Skeleton className="h-5 w-full rounded-md" />
-          </div>
+        <aside className="w-68 shrink-0 hidden lg:block sticky top-24 max-h-[calc(100vh-120px)] p-6 rounded-2xl border border-border/60 bg-card/15">
+          <FilterSidebarSkeleton />
         </aside>
 
         {/* Listings Grid Skeleton */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex flex-col gap-4 border border-border/40 rounded-2xl p-4 bg-card/20">
-              <Skeleton className="h-48 w-full rounded-xl" />
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-5 w-5/6 rounded-md" />
-                <Skeleton className="h-4 w-2/3 rounded-md" />
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <Skeleton className="h-6 w-24 rounded-md" />
-                <Skeleton className="h-8 w-20 rounded-lg" />
-              </div>
-            </div>
-          ))}
+        <div className="flex-1 flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[...Array(9)].map((_, i) => (
+              <PropertyCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -64,9 +44,11 @@ function SearchListFallback() {
 }
 
 export default function SearchPage() {
+  const propertiesPromise = getProperties();
+
   return (
     <Suspense fallback={<SearchListFallback />}>
-      <PropertiesListClient />
+      <PropertiesListClient propertiesPromise={propertiesPromise} />
     </Suspense>
   );
 }
