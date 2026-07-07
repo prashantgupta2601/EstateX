@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Toaster } from '@/components/ui/toast';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -25,6 +26,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         
       </div>
+      <Toaster />
     </div>
   );
 }
