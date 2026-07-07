@@ -65,7 +65,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Dashboard Content Area */}
-        <main className="flex-1 p-4 md:p-8 max-w-5xl w-full mx-auto animate-in fade-in duration-300">
+        <main className="flex-1 p-4 md:p-8 max-w-5xl w-full mx-auto animate-in fade-in duration-300 flex flex-col gap-6">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex flex-wrap items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-wider select-none mb-1">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span className="text-muted-foreground/60">&gt;</span>
+            <Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            {pathname !== '/dashboard' && (
+              <>
+                <span className="text-muted-foreground/60">&gt;</span>
+                <span className="text-foreground">
+                  {pathname === '/profile' 
+                    ? 'My Profile' 
+                    : pathname === '/saved-searches' 
+                      ? 'Saved Searches' 
+                      : pathname === '/enquiries' 
+                        ? 'My Enquiries' 
+                        : pathname === '/price-alerts' 
+                          ? 'Price Drop Alerts' 
+                          : pathname.replace('/', '').replace('-', ' ')}
+                </span>
+              </>
+            )}
+          </nav>
           {children}
         </main>
       </div>
@@ -88,7 +110,7 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: SidebarContentProps
     { label: 'Saved Searches', icon: Search, href: '/saved-searches' },
     { label: 'My Enquiries', icon: MessageSquare, href: '/enquiries' },
     { label: 'My Wishlist', icon: Heart, href: '/wishlist' },
-    { label: 'Price Drop Alerts', icon: Bell, href: '/alerts' },
+    { label: 'Price Drop Alerts', icon: Bell, href: '/price-alerts' },
   ];
 
   return (
