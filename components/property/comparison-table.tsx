@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Check, Minus, ShieldCheck, Heart, ExternalLink } from 'lucide-react';
+import { X, Minus, ShieldCheck, Heart, ExternalLink } from 'lucide-react';
 import { Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
@@ -19,7 +19,10 @@ export default function ComparisonTable({ compareList, removeFromCompare }: Comp
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // 1. Calculate highlights

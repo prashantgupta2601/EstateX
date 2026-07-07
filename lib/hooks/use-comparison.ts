@@ -23,8 +23,10 @@ export function useComparison() {
 
   // Initialize and synchronize state
   useEffect(() => {
-    setComparison(getSavedComparison());
-    setIsMounted(true);
+    const timer = setTimeout(() => {
+      setComparison(getSavedComparison());
+      setIsMounted(true);
+    }, 0);
 
     const handleSync = () => {
       setComparison(getSavedComparison());
@@ -33,6 +35,7 @@ export function useComparison() {
     window.addEventListener(COMPARISON_EVENT, handleSync);
     window.addEventListener('storage', handleSync);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener(COMPARISON_EVENT, handleSync);
       window.removeEventListener('storage', handleSync);
     };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { X, GitCompare, ArrowRight } from 'lucide-react';
@@ -10,19 +10,12 @@ import { Button } from '@/components/ui/button';
 
 export default function ComparisonBar() {
   const { comparison, removeFromCompare, clearComparison, isMounted } = useComparison();
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    if (isMounted) {
-      setShouldRender(true);
-    }
-  }, [isMounted]);
 
   const compareList = useMemo(() => {
     return mockProperties.filter((p) => comparison.includes(p.id));
   }, [comparison]);
 
-  if (!shouldRender) return null;
+  if (!isMounted) return null;
 
   const isVisible = comparison.length >= 2;
 

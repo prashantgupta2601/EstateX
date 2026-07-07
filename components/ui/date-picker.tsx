@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface DatePickerProps {
@@ -23,14 +23,16 @@ export default function DatePicker({ value, onChange, placeholder = 'Pick a date
   // Current year/month shown in the calendar view
   const [viewYear, setViewYear] = useState(() => parsedDate?.getFullYear() || new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(() => parsedDate?.getMonth() || new Date().getMonth());
+  const [prevValue, setPrevValue] = useState<string | null>(null);
 
-  // Keep view in sync when value changes externally
-  useEffect(() => {
+  // Keep view in sync when value changes externally during render
+  if (value !== prevValue) {
+    setPrevValue(value);
     if (parsedDate) {
       setViewYear(parsedDate.getFullYear());
       setViewMonth(parsedDate.getMonth());
     }
-  }, [parsedDate]);
+  }
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',

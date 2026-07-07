@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Camera, User, Mail, Phone, MapPin, FileText, Check, ShieldCheck, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ export default function ProfilePage() {
                 className="group relative w-28 h-28 rounded-full border-2 border-border/80 bg-muted hover:border-primary/50 transition-all duration-300 shadow-md cursor-pointer flex items-center justify-center overflow-hidden"
               >
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <Image src={avatarUrl} alt="Avatar" width={112} height={112} className="w-full h-full object-cover" unoptimized />
                 ) : (
                   <span className="text-3xl font-black text-primary/80 select-none">
                     {fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}

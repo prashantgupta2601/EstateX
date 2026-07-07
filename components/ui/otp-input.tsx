@@ -28,6 +28,7 @@ export default function OtpInput({
     if (inputRefs.current[focusIndex] && !disabled) {
       inputRefs.current[focusIndex]?.focus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {

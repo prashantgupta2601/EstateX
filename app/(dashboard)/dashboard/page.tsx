@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, User, Search, MessageSquare, Heart, Bell, ArrowRight } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

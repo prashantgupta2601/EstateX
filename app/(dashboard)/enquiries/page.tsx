@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MessageSquare, Calendar, ChevronDown, ChevronUp, User, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -107,10 +108,12 @@ export default function EnquiriesPage() {
                 <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
                   {/* Thumbnail Image */}
                   <div className="relative w-full sm:w-28 h-20 shrink-0 bg-muted rounded-xl overflow-hidden border border-border/65">
-                    <img 
+                    <Image 
                       src={enquiry.propertyImage} 
                       alt={enquiry.propertyTitle} 
-                      className="w-full h-full object-cover" 
+                      fill
+                      className="object-cover" 
+                      sizes="(max-width: 640px) 100vw, 112px"
                     />
                   </div>
 
