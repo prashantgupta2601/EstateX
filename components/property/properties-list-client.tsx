@@ -360,7 +360,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
   }, [pathname, router, searchParams]);
 
   // Specific Handlers
-  const handleSortChange = (val: SortOption) => {
+  const handleSortChange = useCallback((val: SortOption) => {
     setCurrentPage(1);
     setIsLoading(true);
     setTimeout(() => {
@@ -370,9 +370,9 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
     const params = new URLSearchParams(searchParams.toString());
     params.set('sort', val.replace('-', '_'));
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
+  }, [pathname, router, searchParams]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     const updatedFilters = {
@@ -382,9 +382,9 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
     };
     
     handleFilterChange(updatedFilters);
-  };
+  }, [filters, localSelectedItem, localSearch, handleFilterChange]);
 
-  const handlePurposeChange = (val: string) => {
+  const handlePurposeChange = useCallback((val: string) => {
     const targetRent = val === 'rent';
     const newMin = targetRent ? 5000 : 1000000;
     const newMax = targetRent ? 300000 : 50000000;
@@ -394,7 +394,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
       purpose: val,
       priceRange: [newMin, newMax],
     });
-  };
+  }, [filters, handleFilterChange]);
 
   // --- 3. Compute Live Filtered Properties ---
   const filteredProperties = useMemo(() => {

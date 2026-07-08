@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, MessageSquare, Heart, Bell, ArrowRight, ArrowUpRight, SearchSlash, PlusCircle } from 'lucide-react';
+import { BLUR_DATA_URL } from '@/lib/utils/blur-image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -218,7 +219,16 @@ export default function DashboardClient({
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="relative h-10 w-14 rounded-lg overflow-hidden bg-muted shrink-0 border border-border/65">
                       {prop.images?.[0] ? (
-                        <Image src={prop.images[0]} alt={prop.title} fill className="object-cover" sizes="56px" />
+                        <Image 
+                          src={prop.images[0]} 
+                          alt={prop.title} 
+                          fill 
+                          className="object-cover" 
+                          sizes="56px" 
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-[8px] text-muted-foreground">No Image</div>
                       )}

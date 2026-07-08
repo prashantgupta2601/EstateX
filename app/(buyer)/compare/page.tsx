@@ -6,7 +6,19 @@ import { ArrowLeft, GitCompare } from 'lucide-react';
 import { useComparison } from '@/lib/hooks/use-comparison';
 import { mockProperties } from '@/lib/mock-data/properties';
 import { Button } from '@/components/ui/button';
-import ComparisonTable from '@/components/property/comparison-table';
+import dynamic from 'next/dynamic';
+
+const ComparisonTable = dynamic(
+  () => import('@/components/property/comparison-table'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[450px] border border-dashed border-border/80 rounded-3xl bg-card/25 flex items-center justify-center animate-pulse">
+        <span className="text-sm font-semibold text-muted-foreground">Loading Comparison Table...</span>
+      </div>
+    )
+  }
+);
 
 export default function ComparePage() {
   const { comparison, removeFromCompare, clearComparison, isMounted } = useComparison();

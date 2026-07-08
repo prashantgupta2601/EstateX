@@ -1,6 +1,17 @@
 import React from 'react';
-import EMICalculator from '@/components/tools/emi-calculator';
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+
+const EMICalculator = dynamic(
+  () => import('@/components/tools/emi-calculator'),
+  {
+    loading: () => (
+      <div className="w-full max-w-5xl h-[550px] rounded-3xl border border-border/60 bg-card/45 flex items-center justify-center animate-pulse">
+        <span className="text-sm font-semibold text-muted-foreground">Loading EMI Calculator...</span>
+      </div>
+    )
+  }
+);
 
 export const metadata: Metadata = {
   title: 'EMI Calculator | EstateX',

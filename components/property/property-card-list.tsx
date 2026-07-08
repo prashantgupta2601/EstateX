@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, MapPin, Bed, Maximize, ShieldCheck, Calendar, GitCompare } from 'lucide-react';
@@ -10,16 +10,18 @@ import { Button } from '@/components/ui/button';
 import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
 import { toast } from '@/components/ui/toast';
+import { BLUR_DATA_URL } from '@/lib/utils/blur-image';
 
 interface PropertyCardListProps {
   property: Property;
 }
 
-export default function PropertyCardList({ property }: PropertyCardListProps) {
+function PropertyCardList({ property }: PropertyCardListProps) {
   const { addToCompare, removeFromCompare, isInCompare, isMounted } = useComparison();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const isWishlisted = isMounted ? isInWishlist(property.id) : false;
-  const isCompared = isMounted ? isInCompare(property.id) : false;
+  
+  const isCompared = isMounted && isInCompare(property.id);
+  const isWishlisted = isInWishlist(property.id);
 
   const formatPrice = (price: number, type: 'sale' | 'rent') => {
     let formatted = '';
@@ -54,6 +56,9 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 288px, 320px"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            loading="lazy"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
@@ -213,3 +218,5 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
     </div>
   );
 }
+
+export default memo(PropertyCardList);

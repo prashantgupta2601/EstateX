@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { BLUR_DATA_URL } from '@/lib/utils/blur-image';
 
 interface ImageGalleryProps {
   images: string[];
@@ -81,6 +82,8 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           sizes="100vw"
           priority
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" />
@@ -111,6 +114,9 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 96px, 112px"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                loading="lazy"
               />
             </button>
           );
@@ -151,6 +157,8 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                 className="object-contain"
                 sizes="100vw"
                 priority
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
             </div>
 
@@ -197,6 +205,9 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
                       fill
                       className="object-cover"
                       sizes="64px"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      loading="lazy"
                     />
                   </button>
                 );
