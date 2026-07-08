@@ -54,15 +54,29 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <>
+      <section 
+        role="region" 
+        aria-label="Property image gallery" 
+        className="flex flex-col gap-4 w-full"
+      >
       {/* Main Large Image Display */}
       <div 
+        role="button"
+        tabIndex={0}
         onClick={handleOpenLightbox}
-        className="relative w-full aspect-video md:aspect-[21/9] overflow-hidden rounded-3xl bg-muted border border-border/80 cursor-pointer group shadow-sm"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleOpenLightbox();
+          }
+        }}
+        aria-label={`Property image ${activeIndex + 1} of ${images.length}. Click or press Enter to view fullscreen.`}
+        className="relative w-full aspect-video md:aspect-[21/9] overflow-hidden rounded-3xl bg-muted border border-border/80 cursor-pointer group shadow-sm focus-visible:ring-3 focus-visible:ring-primary focus-visible:outline-hidden"
       >
         <Image
           src={images[activeIndex]}
-          alt="Main Property Image"
+          alt={`Property view ${activeIndex + 1} of ${images.length}`}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           sizes="100vw"
@@ -78,20 +92,22 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
       </div>
 
       {/* Thumbnail Strip Below */}
-      <div className="flex items-center gap-3 overflow-x-auto py-1">
+      <div className="flex items-center gap-3 overflow-x-auto py-1" aria-label="Gallery thumbnails">
         {images.map((img, idx) => {
           const isActive = idx === activeIndex;
           return (
             <button
               key={idx}
               onClick={() => setActiveIndex(idx)}
-              className={`relative w-24 sm:w-28 h-16 sm:h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${
+              aria-label={`Select property photo ${idx + 1}`}
+              aria-current={isActive ? 'true' : 'false'}
+              className={`relative w-24 sm:w-28 h-16 sm:h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-hidden ${
                 isActive ? 'border-primary scale-[1.03] shadow-md' : 'border-border/60 opacity-70 hover:opacity-100 hover:border-border'
               }`}
             >
               <Image
                 src={img}
-                alt={`Property detail thumbnail ${idx + 1}`}
+                alt={`Property thumbnail ${idx + 1}`}
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 96px, 112px"
@@ -100,6 +116,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           );
         })}
       </div>
+    </section>
 
       {/* Fullscreen Lightbox Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -188,6 +205,6 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

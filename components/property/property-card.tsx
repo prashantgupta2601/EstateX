@@ -86,12 +86,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                   addToCompare(property.id);
                 }
               }}
-              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 isCompared
                   ? 'bg-primary border-primary text-primary-foreground'
                   : 'bg-white/80 dark:bg-black/50 border-white/20 text-muted-foreground hover:text-foreground'
               }`}
-              aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
+              aria-label={isCompared ? `Remove ${property.title} from comparison` : `Add ${property.title} to comparison`}
             >
               <GitCompare className="h-4 w-4" />
             </button>
@@ -109,12 +109,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                   toast("Added to Wishlist");
                 }
               }}
-              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer ${
+              className={`p-2 rounded-full backdrop-blur-md border shadow-md transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 isWishlisted
                   ? 'bg-red-500 border-red-500 text-white'
                   : 'bg-white/80 dark:bg-black/50 border-white/20 text-muted-foreground hover:text-foreground'
               }`}
-              aria-label="Add to wishlist"
+              aria-label={isWishlisted ? `Remove ${property.title} from wishlist` : `Add ${property.title} to wishlist`}
             >
               <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
@@ -140,7 +140,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Title */}
         <h3 className="text-base font-bold line-clamp-1 text-foreground mb-1 hover:text-primary transition-colors">
-          <Link href={`/properties/${property.id}`}>{property.title}</Link>
+          <Link href={`/properties/${property.id}`} className="focus-visible:outline-none focus-visible:underline decoration-primary decoration-2">{property.title}</Link>
         </h3>
 
         {/* Location */}
@@ -171,10 +171,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Action Button */}
-        <Link href={`/properties/${property.id}`} className="w-full">
+        <Link href={`/properties/${property.id}`} className="w-full focus-visible:outline-none">
           <Button
             variant="outline"
-            className="w-full h-9 rounded-xl font-semibold border-primary/20 text-primary hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors"
+            className="w-full h-9 rounded-xl font-semibold border-primary/20 text-primary hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-primary"
           >
             View Details
           </Button>
@@ -194,7 +194,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                   addToCompare(property.id);
                 }
               }}
-              className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 cursor-pointer accent-primary"
+              className="rounded border-border text-primary focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary h-3.5 w-3.5 cursor-pointer accent-primary"
             />
             <span>Compare Property</span>
           </label>

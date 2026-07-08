@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, Heart } from 'lucide-react';
+import { Menu, Heart, Accessibility } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -14,11 +14,13 @@ import {
 } from '@/components/ui/sheet';
 import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
+import { useAccessibility } from '@/components/providers/accessibility-provider';
 
 export default function Navbar() {
   const { comparison, isMounted } = useComparison();
   const { wishlist } = useWishlist();
   const [isOpen, setIsOpen] = React.useState(false);
+  const { isAccessibilityMode, toggleAccessibilityMode } = useAccessibility();
 
   const navLinks = [
     { label: 'Buy', href: '/properties?purpose=buy' },
@@ -65,7 +67,7 @@ export default function Navbar() {
           {/* Wishlist Heart Icon with Count Badge */}
           <Link 
             href="/wishlist" 
-            className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Wishlist"
           >
             <Heart className="h-5 w-5" />
@@ -75,6 +77,18 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+
+          {/* Accessibility Toggle Button */}
+          <button
+            onClick={toggleAccessibilityMode}
+            className={`p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${
+              isAccessibilityMode ? 'text-primary bg-primary/10' : ''
+            }`}
+            aria-label="Toggle accessibility mode"
+            title="Toggle Accessibility Mode"
+          >
+            <Accessibility className="h-5 w-5" />
+          </button>
 
           {/* Desktop Authentication buttons */}
           <div className="hidden md:flex items-center gap-2">
@@ -135,6 +149,22 @@ export default function Navbar() {
                       </span>
                     )}
                   </Link>
+
+                  {/* Mobile Accessibility Toggle Row */}
+                  <button
+                    onClick={() => {
+                      toggleAccessibilityMode();
+                      setIsOpen(false);
+                    }}
+                    className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between text-left font-semibold text-base text-muted-foreground w-full cursor-pointer focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <span>Accessibility Mode</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-md font-bold ${
+                      isAccessibilityMode ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isAccessibilityMode ? 'ON' : 'OFF'}
+                    </span>
+                  </button>
 
                   <div className="flex flex-col gap-2 mt-6">
                     <Link href="/login" onClick={() => setIsOpen(false)}>

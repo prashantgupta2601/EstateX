@@ -87,7 +87,11 @@ export default function NearbyMap({ lat, lng, title }: NearbyMapProps) {
       </div>
 
       {/* Leaflet Map */}
-      <div className="w-full h-[260px] sm:h-[320px] md:h-[360px] rounded-3xl overflow-hidden border border-border/80 shadow-md relative z-10">
+      <div 
+        role="application" 
+        aria-label="Property location landmarks map" 
+        className="w-full h-[260px] sm:h-[320px] md:h-[360px] rounded-3xl overflow-hidden border border-border/80 shadow-md relative z-10"
+      >
         <MapContainer
           center={position}
           zoom={14}

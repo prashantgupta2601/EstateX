@@ -25,7 +25,9 @@ export default function ComparisonBar() {
   });
 
   return (
-    <div
+    <section
+      role="region"
+      aria-label="Property comparison tray"
       className={`fixed bottom-0 left-0 right-0 z-40 p-4 md:px-6 md:pb-6 transition-all duration-500 ease-out transform ${
         isVisible
           ? 'translate-y-0 opacity-100 pointer-events-auto'
@@ -48,7 +50,7 @@ export default function ComparisonBar() {
         </div>
 
         {/* Middle: Thumbnails List / Slots */}
-        <div className="flex flex-wrap items-center justify-center gap-3 my-2 md:my-0">
+        <div className="flex flex-wrap items-center justify-center gap-3 my-2 md:my-0" aria-label="Selected properties to compare">
           {slots.map((property, index) => {
             if (property) {
               return (
@@ -60,7 +62,7 @@ export default function ComparisonBar() {
                     {property.images?.[0] ? (
                       <Image
                         src={property.images[0]}
-                        alt={property.title}
+                        alt={`Photo of ${property.title}`}
                         fill
                         className="object-cover"
                         sizes="56px"
@@ -87,8 +89,8 @@ export default function ComparisonBar() {
                   <button
                     type="button"
                     onClick={() => removeFromCompare(property.id)}
-                    className="p-1 rounded-full bg-muted/65 hover:bg-red-500 hover:text-white transition-colors duration-200 cursor-pointer ml-1"
-                    aria-label={`Remove ${property.title}`}
+                    className="p-1 rounded-full bg-muted/65 hover:bg-red-500 hover:text-white transition-colors duration-200 cursor-pointer ml-1 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+                    aria-label={`Remove ${property.title} from comparison`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -112,15 +114,16 @@ export default function ComparisonBar() {
           <button
             type="button"
             onClick={clearComparison}
-            className="text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer transition-colors px-3 py-2 rounded-xl"
+            className="text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer transition-colors px-3 py-2 rounded-xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+            aria-label="Clear all properties from comparison tray"
           >
             Clear
           </button>
           
-          <Link href="/compare">
+          <Link href="/compare" className="focus-visible:outline-hidden">
             <Button
               disabled={comparison.length < 2}
-              className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 shadow-md px-5 flex items-center gap-2 cursor-pointer h-10 text-xs"
+              className="rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 shadow-md px-5 flex items-center gap-2 cursor-pointer h-10 text-xs focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <span>Compare Now</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -128,6 +131,6 @@ export default function ComparisonBar() {
           </Link>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
