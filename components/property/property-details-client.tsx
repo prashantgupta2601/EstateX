@@ -79,7 +79,7 @@ export default function PropertyDetailsClient({ propertyPromise }: PropertyDetai
         </div>
 
         {/* Right Column: Agent Info & Sticky Contact Card */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="hidden lg:flex lg:col-span-4 flex-col gap-6">
           <aside className="sticky top-24 flex flex-col gap-6">
             <SellerContactCard property={property} />
           </aside>

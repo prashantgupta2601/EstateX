@@ -786,14 +786,14 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
       </div>
 
       {/* Toolbar Row: Sort + View Toggle */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-wrap w-full">
         {/* Sort Dropdown & Advanced Filters Trigger */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full xs:w-auto">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <span className="text-xs font-bold text-muted-foreground hidden sm:block">Sort by:</span>
             <Select value={sortBy} onValueChange={(val) => handleSortChange(val as SortOption)}>
-              <SelectTrigger className="w-[190px] text-xs font-semibold cursor-pointer">
+              <SelectTrigger className="w-full xs:w-[190px] text-xs font-semibold cursor-pointer">
                 <SelectValue>{sortLabels[sortBy]}</SelectValue>
               </SelectTrigger>
               <SelectContent align="start" alignItemWithTrigger={false}>
@@ -812,7 +812,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
             trigger={
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2 rounded-xl border-border/80 text-foreground font-semibold px-4 cursor-pointer text-xs h-9 relative"
+                className="flex items-center justify-center gap-2 rounded-xl border-border/80 text-foreground font-semibold px-4 cursor-pointer text-xs h-9 relative w-full xs:w-auto"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
                 <span>Advanced Filters</span>
@@ -820,7 +820,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
                   const activeAdvancedCount = getActiveAdvancedFiltersCount(filters);
                   return activeAdvancedCount > 0 ? (
                     <span className="bg-primary text-primary-foreground text-[9px] font-black h-5 px-2 flex items-center justify-center rounded-full shadow-xs shrink-0 ml-1">
-                      +{activeAdvancedCount} filters active
+                      +{activeAdvancedCount}
                     </span>
                   ) : null;
                 })()}
@@ -830,7 +830,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-1 rounded-xl border border-border/80 p-0.5">
+        <div className="flex items-center gap-1 rounded-xl border border-border/80 p-0.5 self-end sm:self-auto shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('grid')}

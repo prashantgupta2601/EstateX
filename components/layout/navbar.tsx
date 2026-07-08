@@ -18,6 +18,7 @@ import { useWishlist } from '@/lib/hooks/use-wishlist';
 export default function Navbar() {
   const { comparison, isMounted } = useComparison();
   const { wishlist } = useWishlist();
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const navLinks = [
     { label: 'Buy', href: '/properties?purpose=buy' },
@@ -87,7 +88,7 @@ export default function Navbar() {
 
           {/* Mobile Sheet/Hamburger Navigation */}
           <div className="flex md:hidden">
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger
                 render={
                   <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -114,6 +115,7 @@ export default function Navbar() {
                     <Link 
                       key={link.href} 
                       href={link.href} 
+                      onClick={() => setIsOpen(false)}
                       className="hover:text-primary transition-colors py-2 border-b border-border/40"
                     >
                       {link.label}
@@ -123,6 +125,7 @@ export default function Navbar() {
                   {/* Mobile Wishlist link row with Pill Badge */}
                   <Link 
                     href="/wishlist" 
+                    onClick={() => setIsOpen(false)}
                     className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between"
                   >
                     <span>Wishlist</span>
@@ -134,10 +137,10 @@ export default function Navbar() {
                   </Link>
 
                   <div className="flex flex-col gap-2 mt-6">
-                    <Link href="/login">
+                    <Link href="/login" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full">Login</Button>
                     </Link>
-                    <Link href="/signup">
+                    <Link href="/signup" onClick={() => setIsOpen(false)}>
                       <Button className="w-full">Sign Up</Button>
                     </Link>
                   </div>

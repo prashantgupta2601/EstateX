@@ -9,7 +9,7 @@ const NearbyMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[450px] rounded-3xl border border-border/80 bg-card/25 flex items-center justify-center animate-pulse">
+      <div className="w-full h-[260px] sm:h-[320px] md:h-[360px] rounded-3xl border border-border/80 bg-card/25 flex items-center justify-center animate-pulse">
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm font-semibold text-muted-foreground animate-bounce">Loading Nearby Landmarks Map...</span>
         </div>

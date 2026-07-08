@@ -105,7 +105,7 @@ export default function OtpInput({
   };
 
   return (
-    <div className="flex justify-between items-center gap-2 max-w-sm mx-auto w-full">
+    <div className="flex justify-between items-center gap-1.5 sm:gap-2 max-w-sm mx-auto w-full">
       {otpArray.map((digit, idx) => (
         <input
           key={idx}
@@ -127,7 +127,7 @@ export default function OtpInput({
               }
             }
           }}
-          className="h-12 w-12 text-center text-lg font-black rounded-xl border border-border/80 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-hidden disabled:opacity-50 disabled:cursor-not-allowed select-none"
+          className="h-10 w-10 sm:h-12 sm:w-12 text-center text-base sm:text-lg font-black rounded-lg sm:rounded-xl border border-border/80 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-hidden disabled:opacity-50 disabled:cursor-not-allowed select-none"
         />
       ))}
     </div>

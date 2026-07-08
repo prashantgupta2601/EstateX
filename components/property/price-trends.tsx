@@ -84,7 +84,7 @@ export default function PriceTrends({ address, city }: PriceTrendsProps) {
       {/* Chart Section */}
       <div className="w-full h-[260px] sm:h-[320px] bg-card/15 border border-border/50 rounded-3xl p-4 sm:p-6 relative overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={activeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <LineChart data={activeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.4)" />
             <XAxis 
               dataKey="month" 

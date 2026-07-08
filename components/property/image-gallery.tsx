@@ -47,7 +47,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-[21/9] w-full rounded-3xl bg-muted flex items-center justify-center text-muted-foreground border border-border/80">
+      <div className="aspect-video md:aspect-[21/9] w-full rounded-3xl bg-muted flex items-center justify-center text-muted-foreground border border-border/80">
         No images available
       </div>
     );
@@ -58,7 +58,7 @@ export default function ImageGallery({ images }: ImageGalleryProps) {
       {/* Main Large Image Display */}
       <div 
         onClick={handleOpenLightbox}
-        className="relative w-full aspect-[21/9] overflow-hidden rounded-3xl bg-muted border border-border/80 cursor-pointer group shadow-sm"
+        className="relative w-full aspect-video md:aspect-[21/9] overflow-hidden rounded-3xl bg-muted border border-border/80 cursor-pointer group shadow-sm"
       >
         <Image
           src={images[activeIndex]}

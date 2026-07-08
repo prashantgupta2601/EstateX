@@ -163,7 +163,7 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
         </p>
 
         {/* Specs + Action Row */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/40">
+        <div className="flex flex-wrap items-center justify-between mt-auto pt-3 border-t border-border/40 gap-y-3 gap-x-2">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             {property.bedrooms > 0 ? (
               <div className="flex items-center gap-1.5">
@@ -179,7 +179,7 @@ export default function PropertyCardList({ property }: PropertyCardListProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 ml-auto sm:ml-0">
             {/* Compare Checkbox */}
             <label className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer select-none py-1.5">
               <input

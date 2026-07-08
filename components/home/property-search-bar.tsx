@@ -47,16 +47,16 @@ export default function PropertySearchBar() {
       <Tabs
         value={purpose}
         onValueChange={(val) => setPurpose(val as string)}
-        className="w-fit mb-3"
+        className="w-full sm:w-fit mb-3"
       >
-        <TabsList className="bg-background/90 p-1 border border-border/40 shadow-xs">
-          <TabsTrigger value="buy" className="px-4 py-1.5 font-semibold text-sm">
+        <TabsList className="grid grid-cols-3 sm:flex w-full sm:w-fit bg-background/90 p-1 border border-border/40 shadow-xs">
+          <TabsTrigger value="buy" className="px-3 sm:px-4 py-1.5 font-semibold text-xs sm:text-sm">
             Buy
           </TabsTrigger>
-          <TabsTrigger value="rent" className="px-4 py-1.5 font-semibold text-sm">
+          <TabsTrigger value="rent" className="px-3 sm:px-4 py-1.5 font-semibold text-xs sm:text-sm">
             Rent
           </TabsTrigger>
-          <TabsTrigger value="commercial" className="px-4 py-1.5 font-semibold text-sm">
+          <TabsTrigger value="commercial" className="px-3 sm:px-4 py-1.5 font-semibold text-xs sm:text-sm">
             Commercial
           </TabsTrigger>
         </TabsList>
