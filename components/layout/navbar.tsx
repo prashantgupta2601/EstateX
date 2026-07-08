@@ -77,8 +77,12 @@ export default function Navbar() {
 
           {/* Desktop Authentication buttons */}
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" size="sm">Login</Button>
-            <Button size="sm">Sign Up</Button>
+            <Link href="/login">
+              <Button variant="ghost" size="sm">Login</Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm">Sign Up</Button>
+            </Link>
           </div>
 
           {/* Mobile Sheet/Hamburger Navigation */}
@@ -130,8 +134,12 @@ export default function Navbar() {
                   </Link>
 
                   <div className="flex flex-col gap-2 mt-6">
-                    <Button variant="outline" className="w-full">Login</Button>
-                    <Button className="w-full">Sign Up</Button>
+                    <Link href="/login">
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link href="/signup">
+                      <Button className="w-full">Sign Up</Button>
+                    </Link>
                   </div>
                 </nav>
               </SheetContent>

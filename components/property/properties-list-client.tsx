@@ -10,6 +10,7 @@ import EmptyState from '@/components/property/empty-state';
 import FilterSidebar, { FilterState } from '@/components/property/filter-sidebar';
 import AdvancedFiltersModal, { getActiveAdvancedFiltersCount } from '@/components/property/advanced-filters-modal';
 import LocationAutocomplete from '@/components/ui/location-autocomplete';
+import MapErrorBoundary from '@/components/ui/map-error-boundary';
 import { LocalityItem } from '@/lib/mock-data/localities';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -979,7 +980,9 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
                 </div>
               ) : (
                 <div className="animate-fade-in">
-                  <PropertyMap properties={sortedProperties} />
+                  <MapErrorBoundary>
+                    <PropertyMap properties={sortedProperties} />
+                  </MapErrorBoundary>
                 </div>
               )}
               {renderPagination()}

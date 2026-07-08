@@ -76,10 +76,11 @@ EstateX is a modern, premium real estate marketplace platform that connects prop
 ## Roadmap & Project Phases
 
 - [x] **Phase 0**: Project Boilerplate & Shell Layout (Navbar, Footer, routing shell)
-- [ ] **Phase 1**: Search & Filter System (Interactive listings, category filtering, search input)
-- [ ] **Phase 2**: Property Details View (Image carousels, maps, request form, specs)
-- [ ] **Phase 3**: User Authentication & Profiles (Buyer/seller registration, NextAuth setup)
-- [ ] **Phase 4**: Seller Dashboard & Property Uploads (Listing creation, media upload, dashboard UI)
-- [ ] **Phase 5**: Admin Dashboard & Moderation (Approving listings, managing users)
-- [ ] **Phase 6**: Backend Integration (Prisma, PostgreSQL Database integration)
-- [ ] **Phase 7**: AI & Advanced Features (Gemini-powered property summaries and smart search recommendations)
+- [x] **Phase 1**: Search & Filter System (Interactive listings, category filtering, search input, advanced filters modal)
+- [x] **Phase 2**: Property Details View (Image carousels, Leaflet maps, nearby landmarks, price trends, PDF brochure download)
+- [x] **Phase 3**: User Authentication & Profiles (Buyer/seller registration, mock auth flows, interactive profile & security page)
+- [x] **Phase 4**: User Dashboard & Account Features (Saved searches, enquiry messaging history, price drop alerts list)
+- [ ] **Phase 5**: Seller Dashboard & Property Uploads (Listing creation, media upload UI)
+- [ ] **Phase 6**: Admin Dashboard & Moderation (Approving listings, managing users)
+- [ ] **Phase 7**: Backend & Database Integration (Prisma, PostgreSQL Database integration, NextAuth setup)
+- [ ] **Phase 8**: AI & Advanced Features (Gemini-powered property summaries and smart search recommendations)

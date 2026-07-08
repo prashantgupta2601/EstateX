@@ -2,6 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
+import MapErrorBoundary from '@/components/ui/map-error-boundary';
 
 const SinglePropertyMap = dynamic(
   () => import('@/components/property/single-property-map'),
@@ -23,5 +24,9 @@ interface SinglePropertyMapWrapperProps {
 }
 
 export default function SinglePropertyMapWrapper({ lat, lng, title, address }: SinglePropertyMapWrapperProps) {
-  return <SinglePropertyMap lat={lat} lng={lng} title={title} address={address} />;
+  return (
+    <MapErrorBoundary>
+      <SinglePropertyMap lat={lat} lng={lng} title={title} address={address} />
+    </MapErrorBoundary>
+  );
 }

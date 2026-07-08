@@ -2,6 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
+import MapErrorBoundary from '@/components/ui/map-error-boundary';
 
 const NearbyMap = dynamic(
   () => import('@/components/property/nearby-map'),
@@ -24,5 +25,9 @@ interface NearbyMapWrapperProps {
 }
 
 export default function NearbyMapWrapper({ lat, lng, title }: NearbyMapWrapperProps) {
-  return <NearbyMap lat={lat} lng={lng} title={title} />;
+  return (
+    <MapErrorBoundary>
+      <NearbyMap lat={lat} lng={lng} title={title} />
+    </MapErrorBoundary>
+  );
 }
