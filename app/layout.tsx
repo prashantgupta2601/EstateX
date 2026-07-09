@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { fontSans, fontHeading } from "@/lib/fonts";
 import Providers from "@/components/providers";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
+import ClientLayoutWrapper from "@/components/layout/client-layout-wrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,11 +38,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <Providers>
-          <Navbar />
-          <main className="flex-1 flex flex-col">
-            {children}
-          </main>
-          <Footer />
+          <ClientLayoutWrapper>
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </ClientLayoutWrapper>
         </Providers>
       </body>
     </html>
