@@ -12,6 +12,7 @@ export interface SellerListing {
   expiryDate: string;
   isFeatured: boolean;
   images: string[];
+  isSold?: boolean;
 }
 
 export const mockSellerListings: SellerListing[] = [

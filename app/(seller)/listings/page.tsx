@@ -15,7 +15,10 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Building2
+  Building2,
+  CheckCircle2,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +29,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { 
+  Dialog, 
+  DialogClose, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import { mockSellerListings, SellerListing } from '@/lib/mock-data/seller-listings';
 import EmptyState from '@/components/property/empty-state';
@@ -36,6 +48,17 @@ export default function SellerListingsPage() {
   const [selectedTab, setSelectedTab] = useState<'all' | 'active' | 'pending' | 'rejected' | 'paused' | 'expired'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Selected listings for bulk actions
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Dialog State
+  const [activeListing, setActiveListing] = useState<SellerListing | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<'pause_activate' | 'delete' | 'boost' | 'bulk_delete' | null>(null);
+  
+  // Mock boost credits
+  const [boostCredits, setBoostCredits] = useState(3);
 
   // Format Price to INR format (Lakhs/Crores)
   const formatPrice = (price: number) => {
@@ -48,9 +71,17 @@ export default function SellerListingsPage() {
     return `₹${price.toLocaleString('en-IN')}`;
   };
 
-  // Get status badge UI
-  const getStatusBadge = (status: SellerListing['status']) => {
-    switch (status) {
+  // Consistent Status badge color system
+  const getStatusBadge = (listing: SellerListing) => {
+    if (listing.status === 'expired' && listing.isSold) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-650 dark:text-slate-400 border border-slate-500/20">
+          {listing.type === 'rent' ? 'Rented' : 'Sold'}
+        </span>
+      );
+    }
+
+    switch (listing.status) {
       case 'active':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -77,46 +108,128 @@ export default function SellerListingsPage() {
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-450 border border-orange-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-455 border border-orange-500/20">
             Expired
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-650 border border-slate-500/20">
-            {status}
+            {listing.status}
           </span>
         );
     }
   };
 
-  // Toggle pause state
-  const handleTogglePause = (id: string) => {
+  // Toggle pause/active confirmation handlers
+  const confirmPauseActivate = () => {
+    if (!activeListing) return;
+    const isCurrentlyActive = activeListing.status === 'active';
+    const newStatus = isCurrentlyActive ? 'paused' : 'active';
+    
     setListings(prev => 
-      prev.map(listing => {
-        if (listing.id === id) {
-          const isCurrentlyActive = listing.status === 'active';
-          const newStatus = isCurrentlyActive ? 'paused' : 'active';
-          
-          toast(
-            isCurrentlyActive 
-              ? 'Listing paused successfully!' 
-              : 'Listing activated successfully!',
-            'success'
-          );
-          
-          return { ...listing, status: newStatus };
+      prev.map(l => l.id === activeListing.id ? { ...l, status: newStatus } : l)
+    );
+
+    toast(
+      isCurrentlyActive ? 'Listing paused successfully!' : 'Listing activated successfully!',
+      'success'
+    );
+    setDialogOpen(false);
+  };
+
+  // Delete listing confirmation handlers
+  const confirmDelete = () => {
+    if (!activeListing) return;
+    setListings(prev => prev.filter(l => l.id !== activeListing.id));
+    setSelectedIds(prev => prev.filter(id => id !== activeListing.id));
+    toast('Listing deleted successfully!', 'success');
+    setDialogOpen(false);
+  };
+
+  // Boost listing (featured) confirmation handlers
+  const confirmBoost = () => {
+    if (!activeListing) return;
+    setListings(prev => 
+      prev.map(l => l.id === activeListing.id ? { ...l, isFeatured: true } : l)
+    );
+    setBoostCredits(prev => prev - 1);
+    toast('Listing boosted successfully!', 'success');
+    setDialogOpen(false);
+  };
+
+  // Mark listing as Sold or Rented
+  const handleMarkAsSold = (id: string) => {
+    setListings(prev => 
+      prev.map(l => {
+        if (l.id === id) {
+          toast(l.type === 'rent' ? 'Listing marked as Rented!' : 'Listing marked as Sold!', 'success');
+          return { ...l, status: 'expired', isSold: true };
         }
-        return listing;
+        return l;
       })
     );
   };
 
-  // Delete listing
-  const handleDeleteListing = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this listing permanently?')) {
-      setListings(prev => prev.filter(l => l.id !== id));
-      toast('Listing deleted successfully!', 'success');
+  // Renew listing (extends expiry by 30 days)
+  const handleRenewListing = (id: string) => {
+    const today = new Date();
+    const newExpiry = new Date(today.setDate(today.getDate() + 30)).toISOString().split('T')[0];
+    
+    setListings(prev => 
+      prev.map(l => {
+        if (l.id === id) {
+          return { ...l, status: 'active', expiryDate: newExpiry, isSold: false };
+        }
+        return l;
+      })
+    );
+    toast('Listing renewed for 30 days.', 'success');
+  };
+
+  // Bulk action handlers
+  const handleBulkPause = () => {
+    setListings(prev => 
+      prev.map(l => selectedIds.includes(l.id) && l.status === 'active' ? { ...l, status: 'paused' } : l)
+    );
+    toast(`Successfully paused ${selectedIds.length} listings.`, 'success');
+    setSelectedIds([]);
+  };
+
+  const handleBulkRenew = () => {
+    const today = new Date();
+    const newExpiry = new Date(today.setDate(today.getDate() + 30)).toISOString().split('T')[0];
+    
+    setListings(prev => 
+      prev.map(l => selectedIds.includes(l.id) ? { ...l, status: 'active', expiryDate: newExpiry, isSold: false } : l)
+    );
+    toast(`Renewed ${selectedIds.length} listings for 30 days.`, 'success');
+    setSelectedIds([]);
+  };
+
+  const confirmBulkDelete = () => {
+    setListings(prev => prev.filter(l => !selectedIds.includes(l.id)));
+    toast(`Successfully deleted ${selectedIds.length} listings.`, 'success');
+    setSelectedIds([]);
+    setDialogOpen(false);
+  };
+
+  // Checkbox row selection handlers
+  const handleSelectRow = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  // Header checkbox "Select All" page handler
+  const handleSelectAllPage = () => {
+    const pageIds = paginatedListings.map(l => l.id);
+    const isAllSelected = paginatedListings.every(l => selectedIds.includes(l.id));
+    
+    if (isAllSelected) {
+      setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])));
     }
   };
 
@@ -143,6 +256,7 @@ export default function SellerListingsPage() {
     setSearchQuery('');
     setSelectedTab('all');
     setCurrentPage(1);
+    setSelectedIds([]);
   };
 
   const statuses: { value: typeof selectedTab; label: string }[] = [
@@ -155,7 +269,7 @@ export default function SellerListingsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 text-left animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 text-left animate-in fade-in duration-300 relative">
       {/* Page Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -188,6 +302,7 @@ export default function SellerListingsPage() {
                   onClick={() => {
                     setSelectedTab(tab.value);
                     setCurrentPage(1);
+                    setSelectedIds([]);
                   }}
                   className={`px-4 py-2.5 text-xs font-bold transition-all duration-200 border-b-2 -mb-px flex items-center gap-2 cursor-pointer ${
                     isActive 
@@ -218,6 +333,7 @@ export default function SellerListingsPage() {
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
+                setSelectedIds([]);
               }}
               className="pl-10 pr-4 h-10 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/45 w-full text-xs"
             />
@@ -226,7 +342,6 @@ export default function SellerListingsPage() {
 
         {/* Content Area */}
         {listings.length === 0 ? (
-          /* Case 1: Empty state - No properties listed at all */
           <EmptyState
             icon={<Building2 className="h-8 w-8 stroke-[2.5]" />}
             title="No properties listed yet"
@@ -235,7 +350,6 @@ export default function SellerListingsPage() {
             onAction={() => window.location.href = '/seller/listings/new'}
           />
         ) : filteredListings.length === 0 ? (
-          /* Case 2: Filtered empty state - No properties match active query/tabs */
           <EmptyState
             title="No properties match your filter"
             description="Try adjusting your search keywords or switching status tabs."
@@ -250,7 +364,16 @@ export default function SellerListingsPage() {
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-muted/40 border-b border-border/30 select-none">
                   <tr>
-                    <th scope="col" className="px-5 py-3.5 w-20">Thumbnail</th>
+                    {/* Checkbox Column */}
+                    <th scope="col" className="px-4 py-3.5 w-12 text-center align-middle">
+                      <input 
+                        type="checkbox"
+                        checked={paginatedListings.length > 0 && paginatedListings.every(l => selectedIds.includes(l.id))}
+                        onChange={handleSelectAllPage}
+                        className="h-4 w-4 rounded-sm border-border/80 text-primary focus:ring-primary/40 cursor-pointer"
+                      />
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 w-20">Thumbnail</th>
                     <th scope="col" className="px-5 py-3.5">Property Title & Location</th>
                     <th scope="col" className="px-5 py-3.5">Type & BHK</th>
                     <th scope="col" className="px-5 py-3.5">Price</th>
@@ -262,9 +385,23 @@ export default function SellerListingsPage() {
                 </thead>
                 <tbody className="divide-y divide-border/25">
                   {paginatedListings.map((listing) => (
-                    <tr key={listing.id} className="hover:bg-muted/15 transition-colors duration-150">
+                    <tr 
+                      key={listing.id} 
+                      className={`hover:bg-muted/15 transition-colors duration-150 ${
+                        selectedIds.includes(listing.id) ? 'bg-primary/5 hover:bg-primary/10' : ''
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <td className="px-4 py-3.5 text-center align-middle">
+                        <input 
+                          type="checkbox"
+                          checked={selectedIds.includes(listing.id)}
+                          onChange={() => handleSelectRow(listing.id)}
+                          className="h-4 w-4 rounded-sm border-border/80 text-primary focus:ring-primary/40 cursor-pointer"
+                        />
+                      </td>
                       {/* Thumbnail */}
-                      <td className="px-5 py-3.5 align-middle">
+                      <td className="px-3 py-3.5 align-middle">
                         <div className="relative w-14 h-11 rounded-lg overflow-hidden bg-muted border border-border/40 shadow-2xs">
                           <Image 
                             src={listing.images[0] || 'https://placehold.co/120x90?text=Property'} 
@@ -273,14 +410,26 @@ export default function SellerListingsPage() {
                             className="object-cover"
                             sizes="56px"
                           />
+                          {listing.isFeatured && (
+                            <div className="absolute top-0.5 left-0.5 bg-amber-500 p-0.5 rounded-sm select-none shadow-3xs" title="Featured Property">
+                              <Sparkles className="h-2 w-2 text-white fill-white" />
+                            </div>
+                          )}
                         </div>
                       </td>
                       {/* Title + Location */}
                       <td className="px-5 py-3.5 align-middle max-w-[260px]">
                         <div className="flex flex-col min-w-0">
-                          <span className="font-extrabold text-xs text-foreground truncate" title={listing.title}>
-                            {listing.title}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-extrabold text-xs text-foreground truncate" title={listing.title}>
+                              {listing.title}
+                            </span>
+                            {listing.isFeatured && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase bg-amber-550/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 select-none">
+                                Featured
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                             <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/80" />
                             <span className="truncate">{listing.city}</span>
@@ -299,7 +448,7 @@ export default function SellerListingsPage() {
                       </td>
                       {/* Status badge */}
                       <td className="px-5 py-3.5 align-middle">
-                        {getStatusBadge(listing.status)}
+                        {getStatusBadge(listing)}
                       </td>
                       {/* Stats */}
                       <td className="px-5 py-3.5 align-middle">
@@ -324,30 +473,67 @@ export default function SellerListingsPage() {
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           } />
-                          <DropdownMenuContent align="end" className="w-40 bg-card border border-border/85 shadow-lg rounded-xl p-1 z-50">
+                          <DropdownMenuContent align="end" className="w-44 bg-card border border-border/85 shadow-lg rounded-xl p-1 z-50">
                             <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.open(`/properties/${listing.id}`, '_blank')}>
                               <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
                               <span>View Listing</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.location.href = `/seller/properties/edit/${listing.id}`}>
+                            <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}>
                               <Edit3 className="h-4 w-4 mr-2 text-muted-foreground" />
                               <span>Edit Property</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => handleTogglePause(listing.id)}>
-                              {listing.status === 'active' ? (
-                                <>
-                                  <PauseCircle className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>Pause Listing</span>
-                                </>
-                              ) : (
-                                <>
-                                  <PlayCircle className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>Activate Listing</span>
-                                </>
-                              )}
-                            </DropdownMenuItem>
+                            
+                            {(listing.status === 'active' || listing.status === 'paused') && (
+                              <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => {
+                                setActiveListing(listing);
+                                setDialogType('pause_activate');
+                                setDialogOpen(true);
+                              }}>
+                                {listing.status === 'active' ? (
+                                  <>
+                                    <PauseCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                                    <span>Pause Listing</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <PlayCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                                    <span>Activate Listing</span>
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            )}
+
+                            {(listing.status === 'active' || listing.status === 'paused') && (
+                              <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => handleMarkAsSold(listing.id)}>
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span>Mark as {listing.type === 'rent' ? 'Rented' : 'Sold'}</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {listing.status === 'expired' && (
+                              <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => handleRenewListing(listing.id)}>
+                                <RefreshCw className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span>Renew Listing</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {!listing.isFeatured && (
+                              <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => {
+                                setActiveListing(listing);
+                                setDialogType('boost');
+                                setDialogOpen(true);
+                              }}>
+                                <Sparkles className="h-4 w-4 mr-2 text-amber-500 fill-amber-500/20" />
+                                <span className="text-amber-600 dark:text-amber-400 font-bold">Boost Listing</span>
+                              </DropdownMenuItem>
+                            )}
+
                             <DropdownMenuSeparator className="my-1 bg-border/40" />
-                            <DropdownMenuItem variant="destructive" className="cursor-pointer font-bold text-xs text-destructive focus:bg-destructive/10" onClick={() => handleDeleteListing(listing.id)}>
+                            <DropdownMenuItem variant="destructive" className="cursor-pointer font-bold text-xs text-destructive focus:bg-destructive/10" onClick={() => {
+                              setActiveListing(listing);
+                              setDialogType('delete');
+                              setDialogOpen(true);
+                            }}>
                               <Trash2 className="h-4 w-4 mr-2 text-destructive" />
                               <span>Delete Listing</span>
                             </DropdownMenuItem>
@@ -363,8 +549,99 @@ export default function SellerListingsPage() {
             {/* Mobile Card List View */}
             <div className="flex flex-col gap-3.5 md:hidden">
               {paginatedListings.map((listing) => (
-                <div key={listing.id} className="p-4.5 rounded-2xl border border-border/40 bg-background/30 shadow-2xs flex flex-col gap-4">
-                  <div className="flex gap-3">
+                <div 
+                  key={listing.id} 
+                  className={`p-4.5 rounded-2xl border border-border/40 bg-background/30 shadow-2xs flex flex-col gap-4 relative transition-colors ${
+                    selectedIds.includes(listing.id) ? 'bg-primary/5 border-primary/25' : ''
+                  }`}
+                >
+                  {/* Actions Dropdown on mobile card top-right */}
+                  <div className="absolute top-4.5 right-4.5 z-10">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg border border-border/80 text-muted-foreground hover:text-foreground cursor-pointer bg-background/50">
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end" className="w-44 bg-card border border-border/85 shadow-lg rounded-xl p-1 z-50">
+                        <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.open(`/properties/${listing.id}`, '_blank')}>
+                          <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>View Listing</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}>
+                          <Edit3 className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Edit Property</span>
+                        </DropdownMenuItem>
+                        
+                        {(listing.status === 'active' || listing.status === 'paused') && (
+                          <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => {
+                            setActiveListing(listing);
+                            setDialogType('pause_activate');
+                            setDialogOpen(true);
+                          }}>
+                            {listing.status === 'active' ? (
+                              <>
+                                <PauseCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span>Pause Listing</span>
+                              </>
+                            ) : (
+                              <>
+                                <PlayCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                                <span>Activate Listing</span>
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        )}
+
+                        {(listing.status === 'active' || listing.status === 'paused') && (
+                          <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => handleMarkAsSold(listing.id)}>
+                            <CheckCircle2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span>Mark as {listing.type === 'rent' ? 'Rented' : 'Sold'}</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        {listing.status === 'expired' && (
+                          <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => handleRenewListing(listing.id)}>
+                            <RefreshCw className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span>Renew Listing</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        {!listing.isFeatured && (
+                          <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => {
+                            setActiveListing(listing);
+                            setDialogType('boost');
+                            setDialogOpen(true);
+                          }}>
+                            <Sparkles className="h-4 w-4 mr-2 text-amber-500 fill-amber-500/20" />
+                            <span className="text-amber-600 dark:text-amber-400 font-bold">Boost Listing</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        <DropdownMenuSeparator className="my-1 bg-border/40" />
+                        <DropdownMenuItem variant="destructive" className="cursor-pointer font-bold text-xs text-destructive focus:bg-destructive/10" onClick={() => {
+                          setActiveListing(listing);
+                          setDialogType('delete');
+                          setDialogOpen(true);
+                        }}>
+                          <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+                          <span>Delete Listing</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="flex gap-3 items-start">
+                    {/* Checkbox */}
+                    <div className="flex items-center h-16 align-middle shrink-0">
+                      <input 
+                        type="checkbox"
+                        checked={selectedIds.includes(listing.id)}
+                        onChange={() => handleSelectRow(listing.id)}
+                        className="h-4 w-4 rounded-sm border-border/80 text-primary focus:ring-primary/40 cursor-pointer"
+                      />
+                    </div>
+                    
                     {/* Image */}
                     <div className="relative w-20 h-16 rounded-xl overflow-hidden bg-muted border border-border/40 shrink-0 shadow-3xs">
                       <Image 
@@ -374,25 +651,36 @@ export default function SellerListingsPage() {
                         className="object-cover"
                         sizes="80px"
                       />
+                      {listing.isFeatured && (
+                        <div className="absolute top-1 left-1 bg-amber-500 p-0.5 rounded-sm shadow-3xs" title="Featured Property">
+                          <Sparkles className="h-2 w-2 text-white fill-white" />
+                        </div>
+                      )}
                     </div>
                     {/* Primary Info */}
-                    <div className="flex-1 flex flex-col min-w-0 text-left justify-between">
+                    <div className="flex-1 flex flex-col min-w-0 text-left justify-between min-h-16 pr-6">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-extrabold text-xs text-foreground line-clamp-1 truncate max-w-[130px]" title={listing.title}>
                           {listing.title}
                         </span>
-                        {getStatusBadge(listing.status)}
                       </div>
                       
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                         <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/80" />
                         <span className="truncate">{listing.city}</span>
                       </span>
 
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-[11px] font-bold text-muted-foreground capitalize">
-                          {listing.type} • {listing.bhk} BHK
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-muted-foreground capitalize">
+                            {listing.type} • {listing.bhk} BHK
+                          </span>
+                          {listing.isFeatured && (
+                            <span className="inline-flex items-center px-1 py-0.2 rounded-sm text-[8px] font-black uppercase bg-amber-500/10 text-amber-600 border border-amber-500/20 shrink-0">
+                              Featured
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs font-black text-primary">
                           {formatPrice(listing.price)}
                         </span>
@@ -406,7 +694,10 @@ export default function SellerListingsPage() {
                       <span><strong>{listing.views}</strong> views</span>
                       <span><strong>{listing.leads}</strong> leads</span>
                     </div>
-                    <span>Posted: {new Date(listing.postedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(listing)}
+                      <span>Posted: {new Date(listing.postedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                    </div>
                   </div>
 
                   {/* Quick Action Buttons */}
@@ -414,24 +705,54 @@ export default function SellerListingsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer"
-                      onClick={() => window.location.href = `/seller/properties/edit/${listing.id}`}
+                      className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer bg-background/40"
+                      onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}
                     >
                       Edit
                     </Button>
+                    
+                    {listing.status === 'active' || listing.status === 'paused' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer bg-background/40"
+                        onClick={() => {
+                          setActiveListing(listing);
+                          setDialogType('pause_activate');
+                          setDialogOpen(true);
+                        }}
+                      >
+                        {listing.status === 'active' ? 'Pause' : 'Activate'}
+                      </Button>
+                    ) : listing.status === 'expired' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer bg-background/40"
+                        onClick={() => handleRenewListing(listing.id)}
+                      >
+                        Renew
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer bg-background/40 disabled:opacity-50"
+                        disabled
+                      >
+                        Unavailable
+                      </Button>
+                    )}
+
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer"
-                      onClick={() => handleTogglePause(listing.id)}
-                    >
-                      {listing.status === 'active' ? 'Pause' : 'Activate'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl h-8.5 text-[11px] font-bold border-destructive/25 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
-                      onClick={() => handleDeleteListing(listing.id)}
+                      className="rounded-xl h-8.5 text-[11px] font-bold border-destructive/25 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer bg-background/40"
+                      onClick={() => {
+                        setActiveListing(listing);
+                        setDialogType('delete');
+                        setDialogOpen(true);
+                      }}
                     >
                       Delete
                     </Button>
@@ -490,6 +811,178 @@ export default function SellerListingsPage() {
           </div>
         )}
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-background/85 border border-border/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-4.5 animate-in slide-in-from-bottom-10 fade-in duration-300 max-w-lg w-[calc(100%-2rem)] sm:w-auto">
+          <span className="text-xs font-bold text-foreground shrink-0 select-none">
+            {selectedIds.length} selected
+          </span>
+          <div className="h-4 w-px bg-border/80 shrink-0" />
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8.5 text-[11px] font-bold border-border/85 cursor-pointer bg-background/50 hover:bg-muted/50 shrink-0"
+              onClick={handleBulkPause}
+            >
+              Pause All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8.5 text-[11px] font-bold border-border/85 cursor-pointer bg-background/50 hover:bg-muted/50 shrink-0"
+              onClick={handleBulkRenew}
+            >
+              Renew All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-8.5 text-[11px] font-bold border-destructive/25 text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer bg-background/50 shrink-0"
+              onClick={() => {
+                setActiveListing(null);
+                setDialogType('bulk_delete');
+                setDialogOpen(true);
+              }}
+            >
+              Delete All
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation & Promos Dialog Overlay */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl bg-card border border-border/80 p-5 gap-4">
+          {dialogType === 'pause_activate' && activeListing && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+                  {activeListing.status === 'active' ? 'Pause Listing?' : 'Activate Listing?'}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-2 select-none leading-relaxed">
+                  {activeListing.status === 'active' 
+                    ? `Are you sure you want to temporarily pause "${activeListing.title}"? It will be hidden from search results and won't receive new leads.`
+                    : `Are you sure you want to activate "${activeListing.title}"? It will become visible on the public portal and start receiving leads.`}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                  Cancel
+                </DialogClose>
+                <Button 
+                  className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                  onClick={confirmPauseActivate}
+                >
+                  {activeListing.status === 'active' ? 'Pause Listing' : 'Activate Listing'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {dialogType === 'delete' && activeListing && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-extrabold text-destructive flex items-center gap-2">
+                  Delete Listing?
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-2 select-none leading-relaxed">
+                  Are you sure you want to delete <strong className="text-foreground">"{activeListing.title}"</strong>? <span className="text-destructive font-semibold">This action cannot be undone.</span> You will permanently lose this listing and all associated lead and view metrics.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                  Cancel
+                </DialogClose>
+                <Button 
+                  className="rounded-xl bg-destructive hover:bg-destructive/95 text-destructive-foreground h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                  onClick={confirmDelete}
+                >
+                  Delete Listing
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {dialogType === 'bulk_delete' && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-extrabold text-destructive flex items-center gap-2">
+                  Delete {selectedIds.length} Listings?
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-2 select-none leading-relaxed">
+                  Are you sure you want to permanently delete the <strong className="text-foreground">{selectedIds.length}</strong> selected listings? <span className="text-destructive font-semibold">This action cannot be undone</span> and all data for these listings will be lost.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                  Cancel
+                </DialogClose>
+                <Button 
+                  className="rounded-xl bg-destructive hover:bg-destructive/95 text-destructive-foreground h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                  onClick={confirmBulkDelete}
+                >
+                  Delete All
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {dialogType === 'boost' && activeListing && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
+                  Boost Listing
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-2 select-none leading-relaxed">
+                  Stand out from the crowd! Boosted properties appear at the top of buyer searches, display featured badges, and receive up to 5x more clicks.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex flex-col gap-1 text-xs select-none mt-2">
+                <span className="font-bold">Pro Plan Boost Credits</span>
+                {boostCredits > 0 ? (
+                  <span>You have <strong>{boostCredits}</strong> boost credits remaining this month.</span>
+                ) : (
+                  <span>You have run out of boost credits. Upgrade your subscription to boost more listings.</span>
+                )}
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                {boostCredits > 0 ? (
+                  <>
+                    <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                      Cancel
+                    </DialogClose>
+                    <Button 
+                      className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                      onClick={confirmBoost}
+                    >
+                      Boost Now (Uses 1 Credit)
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                      Close
+                    </DialogClose>
+                    <Button 
+                      className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        window.location.href = '/seller/subscription';
+                      }}
+                    >
+                      Upgrade Plan
+                    </Button>
+                  </>
+                )}
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
