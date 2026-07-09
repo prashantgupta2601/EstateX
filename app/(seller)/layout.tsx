@@ -46,7 +46,9 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
       let label = part.charAt(0).toUpperCase() + part.slice(1);
       if (part === 'seller') label = 'Seller';
       else if (part === 'properties') label = 'My Properties';
+      else if (part === 'listings') label = 'My Properties';
       else if (part === 'add') label = 'Add Property';
+      else if (part === 'new') label = 'Add Property';
       else if (part === 'leads') label = 'Leads';
       else if (part === 'analytics') label = 'Analytics';
       else if (part === 'profile') label = 'Profile & KYC';
@@ -128,7 +130,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
               </Button>
             </Link>
 
-            <Link href="/seller/properties/add">
+            <Link href="/seller/listings/new">
               <Button className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-4 shadow-xs hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer flex items-center gap-1.5 h-9 text-xs">
                 <Plus className="h-4 w-4" />
                 <span>Post New Property</span>
@@ -190,8 +192,8 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: SidebarContentProps
     {
       title: 'LISTINGS',
       items: [
-        { label: 'My Properties', icon: Building2, href: '/seller/properties' },
-        { label: 'Add New Property', icon: PlusCircle, href: '/seller/properties/add' },
+        { label: 'My Properties', icon: Building2, href: '/listings' },
+        { label: 'Add New Property', icon: PlusCircle, href: '/seller/listings/new' },
       ],
     },
     {

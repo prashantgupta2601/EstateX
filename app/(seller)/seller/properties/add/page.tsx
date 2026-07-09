@@ -16,7 +16,7 @@ export default function AddPropertyPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      router.push('/seller/properties');
+      router.push('/listings');
     }, 1200);
   };
 
