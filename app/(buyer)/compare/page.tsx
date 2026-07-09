@@ -7,6 +7,8 @@ import { useComparison } from '@/lib/hooks/use-comparison';
 import { mockProperties } from '@/lib/mock-data/properties';
 import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import EmptyState from '@/components/property/empty-state';
 
 const ComparisonTable = dynamic(
   () => import('@/components/property/comparison-table'),
@@ -22,6 +24,7 @@ const ComparisonTable = dynamic(
 
 export default function ComparePage() {
   const { comparison, removeFromCompare, clearComparison, isMounted } = useComparison();
+  const router = useRouter();
 
   const compareList = useMemo(() => {
     return mockProperties.filter((property) => comparison.includes(property.id));
@@ -48,23 +51,17 @@ export default function ComparePage() {
           <p className="mt-1 text-sm text-muted-foreground">Compare details and pricing side-by-side.</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border/85 rounded-3xl bg-card/25 min-h-[450px]">
-          <div className="p-4.5 rounded-full bg-primary/10 text-primary mb-5">
-            <GitCompare className="h-8 w-8 stroke-[2]" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground">Select at least 2 properties to compare</h3>
-          <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-            {compareList.length === 1 
+        <EmptyState
+          icon={<GitCompare className="h-8 w-8 stroke-[2]" />}
+          title="Select at least 2 properties to compare"
+          description={
+            compareList.length === 1 
               ? `You have selected 1 property ("${compareList[0].title}"). Select at least one more property from our listings to view their side-by-side comparison.`
-              : 'You haven\'t added any properties to compare yet. Go back to listings and click the compare checkbox on any property.'}
-          </p>
-          <Link href="/properties" className="mt-6">
-            <Button className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 shadow-md cursor-pointer flex items-center gap-1.5 h-11">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Browse Properties</span>
-            </Button>
-          </Link>
-        </div>
+              : "You haven't added any properties to compare yet. Go back to listings and click the compare checkbox on any property."
+          }
+          actionLabel="Browse Properties"
+          onAction={() => router.push('/properties')}
+        />
       </div>
     );
   }

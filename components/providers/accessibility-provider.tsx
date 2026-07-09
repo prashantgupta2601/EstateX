@@ -17,7 +17,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('estatex-accessibility-mode');
       if (saved === 'true') {
-        setIsAccessibilityMode(true);
+        setTimeout(() => {
+          setIsAccessibilityMode(true);
+        }, 0);
         document.documentElement.classList.add('accessibility-mode');
       }
     }

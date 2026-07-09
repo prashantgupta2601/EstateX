@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Heart, Search, ChevronRight, Trash2 } from 'lucide-react';
+import { Heart, Search, Trash2 } from 'lucide-react';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
 import { mockProperties } from '@/lib/mock-data/properties';
 import PropertyCard from '@/components/property/property-card';
+import EmptyState from '@/components/property/empty-state';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import {
@@ -21,6 +22,7 @@ import {
 
 export default function WishlistPage() {
   const { wishlist, clearWishlist } = useWishlist();
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
@@ -92,9 +94,11 @@ export default function WishlistPage() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 mt-4">
-                <DialogClose render={<Button variant="outline" className="rounded-xl" />}>
-                  Cancel
-                </DialogClose>
+                <DialogClose render={
+                  <Button variant="outline" className="rounded-xl">
+                    Cancel
+                  </Button>
+                } />
                 <Button 
                   variant="destructive" 
                   className="rounded-xl font-semibold cursor-pointer"
@@ -123,22 +127,18 @@ export default function WishlistPage() {
         </div>
       ) : (
         /* Empty State */
-        <div className="flex flex-col items-center justify-center py-20 px-4 text-center border border-dashed border-border/85 rounded-3xl bg-card/25 min-h-[450px] animate-fade-in">
-          <div className="p-4.5 rounded-full bg-red-500/10 text-red-500 mb-5 relative group">
-            <Heart className="h-8 w-8 stroke-[2] group-hover:scale-110 transition-transform duration-300 fill-red-500/10" />
-            <Search className="h-4 w-4 absolute bottom-2 right-2 text-primary bg-background dark:bg-black rounded-full p-0.5" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground">No saved properties yet</h3>
-          <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-            You haven&apos;t saved any properties yet. Explore our listings and click the heart icon on any property to save it here.
-          </p>
-          <Link href="/properties" className="mt-6">
-            <Button className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-6 shadow-md cursor-pointer flex items-center gap-1.5 h-11">
-              <span>Start Exploring</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={
+            <div className="relative group">
+              <Heart className="h-8 w-8 stroke-[2] group-hover:scale-110 transition-transform duration-300 fill-red-500/10 text-red-500" />
+              <Search className="h-4 w-4 absolute -bottom-1 -right-1 text-primary bg-background dark:bg-black rounded-full p-0.5" />
+            </div>
+          }
+          title="No saved properties yet"
+          description="You haven't saved any properties yet. Explore our listings and click the heart icon on any property to save it here."
+          actionLabel="Start Exploring"
+          onAction={() => router.push('/properties')}
+        />
       )}
     </div>
   );

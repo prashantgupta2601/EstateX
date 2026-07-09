@@ -42,7 +42,7 @@ function PropertyCardList({ property }: PropertyCardListProps) {
   });
 
   return (
-    <div className={`group flex flex-col sm:flex-row rounded-2xl border bg-card text-card-foreground shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden ${
+    <div className={`group flex flex-col sm:flex-row rounded-2xl border bg-card text-card-foreground shadow-sm hover:shadow-md hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-300 ease-out overflow-hidden ${
       isCompared
         ? 'border-primary ring-1 ring-primary/20 bg-primary/[0.01]'
         : 'border-border/60'

@@ -877,7 +877,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
           
           {/* Price Range Chip */}
           {isPriceFilterActive && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in zoom-in-95 duration-200">
               <span>{formatIndianCurrencyShort(filters.priceRange[0])} - {formatIndianCurrencyShort(filters.priceRange[1])}</span>
               <button onClick={removePriceFilter} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer text-primary/80 hover:text-primary">
                 <X className="h-3.5 w-3.5" />
@@ -887,7 +887,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
           {/* Property Types Chips */}
           {filters.propertyTypes.map((type) => (
-            <span key={type} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 capitalize">
+            <span key={type} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 capitalize animate-in fade-in zoom-in-95 duration-200">
               <span>{type === 'villa' ? 'Villa / House' : type === 'plot' ? 'Plot / Land' : type === 'office' ? 'Office Space' : type === 'shop' ? 'Shop / Retail' : type}</span>
               <button onClick={() => removePropertyTypeFilter(type)} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer text-primary/80 hover:text-primary">
                 <X className="h-3.5 w-3.5" />
@@ -897,7 +897,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
           {/* BHK Chips */}
           {filters.bhk.map((b) => (
-            <span key={b} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span key={b} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in zoom-in-95 duration-200">
               <span>{b} BHK</span>
               <button onClick={() => removeBhkFilter(b)} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer text-primary/80 hover:text-primary">
                 <X className="h-3.5 w-3.5" />
@@ -907,7 +907,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
           {/* Amenities Chips */}
           {filters.selectedAmenities.map((amenity) => (
-            <span key={amenity} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 capitalize">
+            <span key={amenity} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 capitalize animate-in fade-in zoom-in-95 duration-200">
               <span>{amenity.replace('-', ' ')}</span>
               <button onClick={() => removeAmenityFilter(amenity)} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer text-primary/80 hover:text-primary">
                 <X className="h-3.5 w-3.5" />
@@ -917,7 +917,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
           {/* Furnishing Chip */}
           {filters.furnishing !== 'Any' && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in zoom-in-95 duration-200">
               <span>{filters.furnishing}</span>
               <button onClick={removeFurnishingFilter} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer text-primary/80 hover:text-primary">
                 <X className="h-3.5 w-3.5" />
