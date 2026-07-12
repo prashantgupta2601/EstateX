@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { 
   Search, 
   Plus, 
@@ -43,11 +44,39 @@ import { mockSellerListings, SellerListing } from '@/lib/mock-data/seller-listin
 import EmptyState from '@/components/property/empty-state';
 
 export default function SellerListingsPage() {
-  const [listings, setListings] = useState<SellerListing[]>(mockSellerListings);
+  const router = useRouter();
+  const [listings, setListings] = useState<SellerListing[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState<'all' | 'active' | 'pending' | 'rejected' | 'paused' | 'expired'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    const stored = localStorage.getItem('estatex_seller_listings');
+    if (stored) {
+      setListings(JSON.parse(stored));
+    } else {
+      setListings(mockSellerListings);
+      localStorage.setItem('estatex_seller_listings', JSON.stringify(mockSellerListings));
+    }
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem('estatex_seller_listings', JSON.stringify(listings));
+    }
+  }, [listings, isMounted]);
+
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col gap-6 text-left py-12 items-center justify-center min-h-[400px]">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-sm font-medium text-muted-foreground animate-pulse">Loading your listings...</span>
+      </div>
+    );
+  }
 
   // Selected listings for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -75,7 +104,7 @@ export default function SellerListingsPage() {
   const getStatusBadge = (listing: SellerListing) => {
     if (listing.status === 'expired' && listing.isSold) {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-650 dark:text-slate-400 border border-slate-500/20">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
           {listing.type === 'rent' ? 'Rented' : 'Sold'}
         </span>
       );
@@ -90,31 +119,31 @@ export default function SellerListingsPage() {
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-450 border border-amber-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20" title="Awaiting admin approval">
             Pending
           </span>
         );
       case 'rejected':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-650 dark:text-red-400 border border-red-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
             Rejected
           </span>
         );
       case 'paused':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/25">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
             Paused
           </span>
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-455 border border-orange-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
             Expired
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-650 border border-slate-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 border border-slate-500/20">
             {listing.status}
           </span>
         );
@@ -153,8 +182,7 @@ export default function SellerListingsPage() {
     setListings(prev => 
       prev.map(l => l.id === activeListing.id ? { ...l, isFeatured: true } : l)
     );
-    setBoostCredits(prev => prev - 1);
-    toast('Listing boosted successfully!', 'success');
+    toast('Plan upgraded! Listing boosted successfully.', 'success');
     setDialogOpen(false);
   };
 
@@ -189,21 +217,31 @@ export default function SellerListingsPage() {
 
   // Bulk action handlers
   const handleBulkPause = () => {
+    const activeSelected = listings.filter(l => selectedIds.includes(l.id) && l.status === 'active');
+    if (activeSelected.length === 0) {
+      toast('No active listings selected to pause.', 'error');
+      return;
+    }
     setListings(prev => 
       prev.map(l => selectedIds.includes(l.id) && l.status === 'active' ? { ...l, status: 'paused' } : l)
     );
-    toast(`Successfully paused ${selectedIds.length} listings.`, 'success');
+    toast(`Successfully paused ${activeSelected.length} listings.`, 'success');
     setSelectedIds([]);
   };
 
   const handleBulkRenew = () => {
+    const expiredSelected = listings.filter(l => selectedIds.includes(l.id) && l.status === 'expired');
+    if (expiredSelected.length === 0) {
+      toast('No expired listings selected to renew.', 'error');
+      return;
+    }
     const today = new Date();
     const newExpiry = new Date(today.setDate(today.getDate() + 30)).toISOString().split('T')[0];
     
     setListings(prev => 
-      prev.map(l => selectedIds.includes(l.id) ? { ...l, status: 'active', expiryDate: newExpiry, isSold: false } : l)
+      prev.map(l => selectedIds.includes(l.id) && l.status === 'expired' ? { ...l, status: 'active', expiryDate: newExpiry, isSold: false } : l)
     );
-    toast(`Renewed ${selectedIds.length} listings for 30 days.`, 'success');
+    toast(`Renewed ${expiredSelected.length} listings for 30 days.`, 'success');
     setSelectedIds([]);
   };
 
@@ -478,7 +516,7 @@ export default function SellerListingsPage() {
                               <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
                               <span>View Listing</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}>
+                            <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => router.push(`/seller/listings/${listing.id}/edit`)}>
                               <Edit3 className="h-4 w-4 mr-2 text-muted-foreground" />
                               <span>Edit Property</span>
                             </DropdownMenuItem>
@@ -548,6 +586,30 @@ export default function SellerListingsPage() {
 
             {/* Mobile Card List View */}
             <div className="flex flex-col gap-3.5 md:hidden">
+              {paginatedListings.length > 0 && (
+                <div className="flex items-center justify-between px-2 pb-2 border-b border-border/20">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox"
+                      id="mobile-select-all"
+                      checked={paginatedListings.length > 0 && paginatedListings.every(l => selectedIds.includes(l.id))}
+                      onChange={handleSelectAllPage}
+                      className="h-4 w-4 rounded-sm border-border/80 text-primary focus:ring-primary/40 cursor-pointer"
+                    />
+                    <label htmlFor="mobile-select-all" className="text-xs font-bold text-muted-foreground select-none cursor-pointer">
+                      Select All ({paginatedListings.length})
+                    </label>
+                  </div>
+                  {selectedIds.length > 0 && (
+                    <button 
+                      onClick={() => setSelectedIds([])}
+                      className="text-xs font-bold text-destructive hover:underline"
+                    >
+                      Deselect All
+                    </button>
+                  )}
+                </div>
+              )}
               {paginatedListings.map((listing) => (
                 <div 
                   key={listing.id} 
@@ -568,7 +630,7 @@ export default function SellerListingsPage() {
                           <ExternalLink className="h-4 w-4 mr-2 text-muted-foreground" />
                           <span>View Listing</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}>
+                        <DropdownMenuItem className="cursor-pointer font-bold text-xs" onClick={() => router.push(`/seller/listings/${listing.id}/edit`)}>
                           <Edit3 className="h-4 w-4 mr-2 text-muted-foreground" />
                           <span>Edit Property</span>
                         </DropdownMenuItem>
@@ -706,7 +768,7 @@ export default function SellerListingsPage() {
                       variant="outline"
                       size="sm"
                       className="rounded-xl h-8.5 text-[11px] font-bold border-border/80 cursor-pointer bg-background/40"
-                      onClick={() => window.location.href = `/seller/listings/${listing.id}/edit`}
+                      onClick={() => router.push(`/seller/listings/${listing.id}/edit`)}
                     >
                       Edit
                     </Button>
@@ -933,51 +995,38 @@ export default function SellerListingsPage() {
             <>
               <DialogHeader>
                 <DialogTitle className="text-base font-extrabold text-foreground flex items-center gap-2">
-                  Boost Listing
+                  <Sparkles className="h-5 w-5 text-amber-500 fill-amber-500/20" />
+                  Upgrade to Boost Listing
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-2 select-none leading-relaxed">
-                  Stand out from the crowd! Boosted properties appear at the top of buyer searches, display featured badges, and receive up to 5x more clicks.
+                  Stand out from the crowd! Featured properties appear at the top of buyer search results, display a prominent premium badge, and receive up to <strong className="text-foreground">5x more buyer leads</strong>.
+                  <br /><br />
+                  This property is currently not featured. Upgrade to our <strong className="text-foreground">Pro Seller Plan</strong> to feature this listing and unlock unlimited leads.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex flex-col gap-1 text-xs select-none mt-2">
-                <span className="font-bold">Pro Plan Boost Credits</span>
-                {boostCredits > 0 ? (
-                  <span>You have <strong>{boostCredits}</strong> boost credits remaining this month.</span>
-                ) : (
-                  <span>You have run out of boost credits. Upgrade your subscription to boost more listings.</span>
-                )}
+                <span className="font-bold flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 fill-amber-500/20" />
+                  Pro Plan Benefits
+                </span>
+                <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                  <li>Featured placement in top cities</li>
+                  <li>Instant WhatsApp lead alerts</li>
+                  <li>Dedicated Relationship Manager</li>
+                </ul>
               </div>
 
               <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
-                {boostCredits > 0 ? (
-                  <>
-                    <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
-                      Cancel
-                    </DialogClose>
-                    <Button 
-                      className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
-                      onClick={confirmBoost}
-                    >
-                      Boost Now (Uses 1 Credit)
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
-                      Close
-                    </DialogClose>
-                    <Button 
-                      className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
-                      onClick={() => {
-                        setDialogOpen(false);
-                        window.location.href = '/seller/subscription';
-                      }}
-                    >
-                      Upgrade Plan
-                    </Button>
-                  </>
-                )}
+                <DialogClose render={<Button variant="ghost" className="rounded-xl border border-border/80 h-9 font-bold text-xs cursor-pointer w-full sm:w-auto" />}>
+                  Cancel
+                </DialogClose>
+                <Button 
+                  className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white h-9 font-bold text-xs cursor-pointer w-full sm:w-auto"
+                  onClick={confirmBoost}
+                >
+                  Upgrade & Feature Now
+                </Button>
               </DialogFooter>
             </>
           )}

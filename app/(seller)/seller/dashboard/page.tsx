@@ -88,9 +88,21 @@ const mockRecentLeads = [
 
 export default function SellerDashboard() {
   const [mounted, setMounted] = useState(false);
+  const [totalListingsCount, setTotalListingsCount] = useState(sellerProfile.totalListings);
+  const [activeListingsCount, setActiveListingsCount] = useState(sellerProfile.activeListings);
 
   useEffect(() => {
     setMounted(true);
+    const stored = localStorage.getItem('estatex_seller_listings');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setTotalListingsCount(parsed.length);
+        setActiveListingsCount(parsed.filter((l: any) => l.status === 'active').length);
+      } catch (e) {
+        console.error('Failed to parse seller listings from localStorage', e);
+      }
+    }
   }, []);
 
   const maskPhoneNumber = (phone: string) => {
@@ -196,7 +208,7 @@ export default function SellerDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">{sellerProfile.totalListings}</div>
+            <div className="text-2xl font-extrabold text-foreground">{totalListingsCount}</div>
             <div className="flex items-center gap-1 mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
               <span>+20%</span>
@@ -214,7 +226,7 @@ export default function SellerDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">{sellerProfile.activeListings}</div>
+            <div className="text-2xl font-extrabold text-foreground">{activeListingsCount}</div>
             <div className="flex items-center gap-1 mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
               <span>+14%</span>
