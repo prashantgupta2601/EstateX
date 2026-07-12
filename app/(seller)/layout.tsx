@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -28,6 +28,28 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (pathname === '/seller/onboarding') return;
+
+    // Check if new seller (totalListings === 0)
+    let totalListings = sellerProfile.totalListings;
+    const storedProfile = localStorage.getItem('estatex_seller_profile');
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        totalListings = parsed.totalListings ?? sellerProfile.totalListings;
+      } catch (e) {
+        console.error('Error parsing seller profile', e);
+      }
+    }
+
+    const onboardingCompleted = localStorage.getItem('estatex_seller_onboarding_completed') === 'true';
+
+    if (totalListings === 0 && !onboardingCompleted) {
+      router.push('/seller/onboarding');
+    }
+  }, [pathname, router]);
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,6 +87,29 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   };
 
   const breadcrumbs = getBreadcrumbs();
+
+  if (pathname === '/seller/onboarding') {
+    return (
+      <div className="flex min-h-screen w-full flex-col bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100 dark:from-slate-950 dark:via-indigo-950/5 dark:to-slate-900">
+        <header className="flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/80 px-6 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2">
+            <Image 
+              src="/estatex_logo.png" 
+              alt="EstateX Logo" 
+              width={32} 
+              height={32} 
+              className="h-8 w-8 object-contain rounded-lg shadow-xs"
+            />
+            <span className="text-lg font-black tracking-tight text-primary leading-none">EstateX</span>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-8 flex items-center justify-center">
+          {children}
+        </main>
+        <Toaster />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100 dark:from-slate-950 dark:via-indigo-950/5 dark:to-slate-900">
