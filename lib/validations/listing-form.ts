@@ -52,7 +52,16 @@ export const photosDetailsSchema = z.object({
 });
 
 export const pricingDetailsSchema = z.object({
-  price: z.coerce.number().positive({ message: 'Price must be a positive number.' }),
+  price: z.coerce.number({ message: 'Price is required.' }).positive({ message: 'Price must be greater than 0.' }),
+  priceNegotiable: z.boolean().default(false),
+  monthlyRent: z.coerce.number().positive({ message: 'Rent must be positive.' }).optional().or(z.literal('')),
+  securityDeposit: z.coerce.number().positive({ message: 'Deposit must be positive.' }).optional().or(z.literal('')),
+  maintenanceCharges: z.coerce.number().nonnegative({ message: 'Maintenance must be positive.' }).optional().or(z.literal('')),
+  videoUrl: z.string().optional(),
+  virtualTourUrl: z.string().optional(),
+  showPhoneToBuyers: z.boolean().default(true),
+  showWhatsAppButton: z.boolean().default(false),
+  preferredContactTime: z.enum(['morning', 'afternoon', 'evening', 'anytime']).default('anytime'),
 });
 
 export const listingFormSchema = z.object({

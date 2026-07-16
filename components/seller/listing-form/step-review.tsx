@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UseFormWatch } from 'react-hook-form';
-import { ChevronLeft, Check, Sparkles, Building2, MapPin, IndianRupee } from 'lucide-react';
+import { ChevronLeft, Check, Sparkles, Building2, MapPin, IndianRupee, Video, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { ListingFormValues } from '@/lib/validations/listing-form';
@@ -116,10 +116,54 @@ export default function StepReview({
           <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/20 border border-border/40">
             <IndianRupee className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="flex flex-col gap-1 w-full">
-              <span className="font-extrabold text-foreground">Pricing</span>
-              <span className="text-base font-black text-primary mt-1">
-                {formatPrice(Number(pricingDetails.price))}
-              </span>
+              <span className="font-extrabold text-foreground">Expected Price Details</span>
+              <div className="flex flex-col gap-1 mt-1 font-semibold text-muted-foreground">
+                <div>Expected Price: <strong className="text-primary text-sm font-black">{formatPrice(Number(pricingDetails.price))}</strong> <span className="text-[10px] font-bold">({pricingDetails.priceNegotiable ? 'Negotiable' : 'Fixed'})</span></div>
+                {basicDetails.listingType === 'rent' && (
+                  <div className="grid grid-cols-2 gap-2 mt-1 border-t border-border/10 pt-2">
+                    {pricingDetails.monthlyRent && (
+                      <div>Monthly Rent: <strong className="text-foreground">₹ {Number(pricingDetails.monthlyRent).toLocaleString('en-IN')}</strong></div>
+                    )}
+                    {pricingDetails.securityDeposit && (
+                      <div>Security Deposit: <strong className="text-foreground">₹ {Number(pricingDetails.securityDeposit).toLocaleString('en-IN')}</strong></div>
+                    )}
+                    {pricingDetails.maintenanceCharges && (
+                      <div>Maintenance: <strong className="text-foreground">₹ {Number(pricingDetails.maintenanceCharges).toLocaleString('en-IN')}</strong></div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Video / Virtual Tour Info */}
+          {(pricingDetails.videoUrl || pricingDetails.virtualTourUrl) && (
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/20 border border-border/40">
+              <Video className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1 w-full text-left">
+                <span className="font-extrabold text-foreground">Walk-through & Tour</span>
+                <div className="grid grid-cols-2 gap-2 text-muted-foreground mt-1 font-semibold">
+                  {pricingDetails.videoUrl && (
+                    <div>Video Uploaded: <strong className="text-foreground">Yes</strong></div>
+                  )}
+                  {pricingDetails.virtualTourUrl && (
+                    <div className="truncate col-span-2">Virtual Tour: <a href={pricingDetails.virtualTourUrl} target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline truncate inline-block max-w-full">{pricingDetails.virtualTourUrl}</a></div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Contact Preferences Info */}
+          <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/20 border border-border/40">
+            <Phone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1 w-full">
+              <span className="font-extrabold text-foreground">Contact Preferences</span>
+              <div className="grid grid-cols-2 gap-2 text-muted-foreground mt-1 font-semibold">
+                <div>Show Phone: <strong className="text-foreground">{pricingDetails.showPhoneToBuyers ? 'Yes' : 'No'}</strong></div>
+                <div>WhatsApp Enabled: <strong className="text-foreground">{pricingDetails.showWhatsAppButton ? 'Yes' : 'No'}</strong></div>
+                <div className="capitalize">Preferred Call Time: <strong className="text-foreground">{pricingDetails.preferredContactTime}</strong></div>
+              </div>
             </div>
           </div>
 

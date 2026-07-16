@@ -60,7 +60,16 @@ export default function NewPropertyListingPage() {
         coverIndex: 0
       },
       pricingDetails: {
-        price: undefined as unknown as number
+        price: undefined as unknown as number,
+        priceNegotiable: false,
+        monthlyRent: '' as unknown as number,
+        securityDeposit: '' as unknown as number,
+        maintenanceCharges: '' as unknown as number,
+        videoUrl: '',
+        virtualTourUrl: '',
+        showPhoneToBuyers: true,
+        showWhatsAppButton: false,
+        preferredContactTime: 'anytime',
       }
     }
   });
@@ -204,6 +213,7 @@ export default function NewPropertyListingPage() {
             {currentStep === 5 && (
               <StepPricing 
                 register={register} 
+                setValue={setValue} 
                 watch={watch} 
                 errors={errors} 
                 trigger={trigger} 
