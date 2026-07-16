@@ -47,7 +47,7 @@ export const featuresDetailsSchema = z.object({
 });
 
 export const photosDetailsSchema = z.object({
-  images: z.array(z.string()).min(1, { message: 'At least one photo upload is required.' }),
+  images: z.array(z.string()).min(3, { message: 'At least 3 photos are required before proceeding.' }),
   coverIndex: z.number().default(0),
 });
 
