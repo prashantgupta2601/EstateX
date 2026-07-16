@@ -1,18 +1,19 @@
 'use client';
 
 import React from 'react';
-import { UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { ChevronRight, ChevronLeft, Check, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
+import { ListingFormValues } from '@/lib/validations/listing-form';
 
 interface StepFeaturesProps {
-  register: UseFormRegister<any>;
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
-  errors: any;
-  trigger: any;
+  register: UseFormRegister<ListingFormValues>;
+  setValue: UseFormSetValue<ListingFormValues>;
+  watch: UseFormWatch<ListingFormValues>;
+  errors: FieldErrors<ListingFormValues>;
+  trigger: UseFormTrigger<ListingFormValues>;
   onNext: () => void;
   onBack: () => void;
 }

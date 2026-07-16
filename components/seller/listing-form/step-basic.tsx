@@ -1,18 +1,19 @@
 'use client';
 
 import React from 'react';
-import { UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { Building, Trees, Home, Map, Briefcase, Store, Warehouse, Sparkles, ChevronRight } from 'lucide-react';
+import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
+import { Building, Trees, Home, Map, Briefcase, Store, Warehouse, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
+import { ListingFormValues } from '@/lib/validations/listing-form';
 
 interface StepBasicProps {
-  register: UseFormRegister<any>;
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
-  errors: any;
-  trigger: any;
+  register: UseFormRegister<ListingFormValues>;
+  setValue: UseFormSetValue<ListingFormValues>;
+  watch: UseFormWatch<ListingFormValues>;
+  errors: FieldErrors<ListingFormValues>;
+  trigger: UseFormTrigger<ListingFormValues>;
   onNext: () => void;
 }
 
@@ -46,7 +47,7 @@ export default function StepBasic({
   const isResidential = ['apartment', 'villa', 'independent-house'].includes(propertyType);
   const showBhk = isResidential;
 
-  const handleListingTypeSelect = (type: string) => {
+  const handleListingTypeSelect = (type: 'sale' | 'rent' | 'commercial') => {
     setValue('basicDetails.listingType', type, { shouldValidate: true });
     
     // Auto-select logical property type defaults
@@ -95,11 +96,11 @@ export default function StepBasic({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Listing Type</label>
         <div className="grid grid-cols-3 gap-3">
-          {[
+          {([
             { value: 'sale', label: 'For Sale', desc: 'Sell your property' },
             { value: 'rent', label: 'For Rent', desc: 'Rent out your property' },
             { value: 'commercial', label: 'Commercial', desc: 'Offices, shops, etc' }
-          ].map(item => {
+          ] as const).map(item => {
             const isSelected = listingType === item.value;
             return (
               <button

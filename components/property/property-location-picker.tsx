@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, Crosshair } from 'lucide-react';
+import { MapPin, Crosshair } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -60,11 +60,17 @@ export default function PropertyLocationPicker({
   const [localLng, setLocalLng] = useState(lng.toString());
   const markerRef = useRef<L.Marker>(null);
 
-  // Sync inputs with parent state
-  useEffect(() => {
+  const [prevLat, setPrevLat] = useState(lat);
+  const [prevLng, setPrevLng] = useState(lng);
+
+  if (lat !== prevLat) {
+    setPrevLat(lat);
     setLocalLat(lat.toFixed(6));
+  }
+  if (lng !== prevLng) {
+    setPrevLng(lng);
     setLocalLng(lng.toFixed(6));
-  }, [lat, lng]);
+  }
 
   // Sync with selected city when city prop changes
   useEffect(() => {

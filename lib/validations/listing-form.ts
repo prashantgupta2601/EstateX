@@ -25,6 +25,9 @@ export const locationDetailsSchema = z.object({
   streetAddress: z.string().min(5, { message: 'Address must be at least 5 characters.' }),
   city: z.string().min(2, { message: 'City is required.' }),
   state: z.string().min(2, { message: 'State is required.' }),
+  locality: z.string().min(1, { message: 'Locality/Area is required.' }),
+  landmark: z.string().optional(),
+  pincode: z.string().regex(/^\d{6}$/, { message: 'Pincode must be exactly 6 digits.' }),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });

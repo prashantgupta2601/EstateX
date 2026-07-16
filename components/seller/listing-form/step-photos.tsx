@@ -1,16 +1,18 @@
 'use client';
 
 import React from 'react';
-import { UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { ChevronRight, ChevronLeft, Image as ImageIcon, Plus, Trash2, Camera, Sparkles } from 'lucide-react';
+import { UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
+import { ChevronRight, ChevronLeft, Image as ImageIcon, Trash2, Camera, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
+import Image from 'next/image';
+import { ListingFormValues } from '@/lib/validations/listing-form';
 
 interface StepPhotosProps {
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
-  errors: any;
-  trigger: any;
+  setValue: UseFormSetValue<ListingFormValues>;
+  watch: UseFormWatch<ListingFormValues>;
+  errors: FieldErrors<ListingFormValues>;
+  trigger: UseFormTrigger<ListingFormValues>;
   onNext: () => void;
   onBack: () => void;
 }
@@ -111,10 +113,12 @@ export default function StepPhotos({
                   isCover ? 'border-primary ring-2 ring-primary/10' : 'border-border/60'
                 }`}
               >
-                <img 
+                <Image 
                   src={url} 
                   alt={`Preview ${idx + 1}`} 
-                  className="object-cover h-full w-full select-none"
+                  fill
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  className="object-cover select-none"
                 />
                 
                 {/* Image Overlay Toolbar */}

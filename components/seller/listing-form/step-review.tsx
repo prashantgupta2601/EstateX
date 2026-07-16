@@ -2,11 +2,13 @@
 
 import React from 'react';
 import { UseFormWatch } from 'react-hook-form';
-import { ChevronLeft, Check, Sparkles, Building2, MapPin, Compass, Image as ImageIcon, IndianRupee } from 'lucide-react';
+import { ChevronLeft, Check, Sparkles, Building2, MapPin, IndianRupee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { ListingFormValues } from '@/lib/validations/listing-form';
 
 interface StepReviewProps {
-  watch: UseFormWatch<any>;
+  watch: UseFormWatch<ListingFormValues>;
   onBack: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -51,10 +53,12 @@ export default function StepReview({
         
         {/* Cover Photo preview */}
         <div className="md:col-span-1 rounded-2xl overflow-hidden border border-border/60 bg-muted relative aspect-4/3 md:aspect-auto md:h-full">
-          <img 
+          <Image 
             src={coverImage} 
             alt="Cover Preview" 
-            className="object-cover h-full w-full select-none"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover select-none"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4 text-white">
             <span className="text-[10px] font-black uppercase tracking-wider text-primary-foreground/90">Cover Photo</span>
@@ -86,7 +90,11 @@ export default function StepReview({
             <div className="flex flex-col gap-1 w-full">
               <span className="font-extrabold text-foreground">Location & Address</span>
               <p className="text-muted-foreground mt-1 font-semibold leading-relaxed">
-                {locationDetails.streetAddress || 'Address not specified'}, {locationDetails.city}, {locationDetails.state}
+                {locationDetails.streetAddress || 'Address not specified'}
+                {locationDetails.landmark && `, Landmark: ${locationDetails.landmark}`}
+                {locationDetails.locality && `, ${locationDetails.locality}`}
+                , {locationDetails.city}, {locationDetails.state}
+                {locationDetails.pincode && ` - ${locationDetails.pincode}`}
               </p>
             </div>
           </div>

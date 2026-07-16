@@ -1,17 +1,18 @@
 'use client';
 
 import React from 'react';
-import { UseFormRegister, UseFormWatch } from 'react-hook-form';
+import { UseFormRegister, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
 import { ChevronRight, ChevronLeft, IndianRupee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
+import { ListingFormValues } from '@/lib/validations/listing-form';
 
 interface StepPricingProps {
-  register: UseFormRegister<any>;
-  watch: UseFormWatch<any>;
-  errors: any;
-  trigger: any;
+  register: UseFormRegister<ListingFormValues>;
+  watch: UseFormWatch<ListingFormValues>;
+  errors: FieldErrors<ListingFormValues>;
+  trigger: UseFormTrigger<ListingFormValues>;
   onNext: () => void;
   onBack: () => void;
 }
@@ -36,7 +37,7 @@ export default function StepPricing({
   };
 
   // Convert number price to readable format (Lakhs / Crores)
-  const getReadablePrice = (priceVal: any) => {
+  const getReadablePrice = (priceVal: number | string | undefined) => {
     const num = Number(priceVal);
     if (!num || isNaN(num)) return '';
     if (num >= 10000000) {
