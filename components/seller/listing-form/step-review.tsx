@@ -79,7 +79,20 @@ export default function StepReview({
                 {basicDetails.bhk && (
                   <div>Rooms: <strong className="text-foreground">{basicDetails.bhk} BHK</strong></div>
                 )}
-                <div>Area: <strong className="text-foreground">{featuresDetails.superArea || '0'} Sq. Ft.</strong></div>
+                <div>Total Area: <strong className="text-foreground uppercase">{featuresDetails.totalArea || '0'} {featuresDetails.totalAreaUnit || 'sqft'}</strong></div>
+                {featuresDetails.carpetArea && (
+                  <div>Carpet Area: <strong className="text-foreground uppercase">{featuresDetails.carpetArea} {featuresDetails.totalAreaUnit || 'sqft'}</strong></div>
+                )}
+                {basicDetails.propertyType !== 'plot' && (
+                  <div>Floor: <strong className="text-foreground">{featuresDetails.floorNo} of {featuresDetails.totalFloors || 'N/A'}</strong></div>
+                )}
+                <div className="capitalize">Furnishing: <strong className="text-foreground">{featuresDetails.furnishing || 'N/A'}</strong></div>
+                <div className="capitalize">Facing: <strong className="text-foreground">{featuresDetails.facing || 'N/A'}</strong></div>
+                <div className="capitalize">Parking: <strong className="text-foreground">{featuresDetails.parking || 'none'}</strong></div>
+                <div className="capitalize">Age: <strong className="text-foreground">{(featuresDetails.propertyAge || '').replace(/-/g, ' ')}</strong></div>
+                {basicDetails.listingType === 'rent' && featuresDetails.availableFrom && (
+                  <div>Available From: <strong className="text-foreground">{featuresDetails.availableFrom}</strong></div>
+                )}
               </div>
             </div>
           </div>
@@ -109,6 +122,26 @@ export default function StepReview({
               </span>
             </div>
           </div>
+
+          {/* Amenities Info */}
+          {featuresDetails.amenities && featuresDetails.amenities.length > 0 && (
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/20 border border-border/40">
+              <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1 w-full">
+                <span className="font-extrabold text-foreground">Amenities</span>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {featuresDetails.amenities.map((amenity: string) => (
+                    <span 
+                      key={amenity} 
+                      className="px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/20 text-[10px] font-bold text-primary capitalize"
+                    >
+                      {amenity.replace(/-/g, ' ')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

@@ -33,10 +33,17 @@ export const locationDetailsSchema = z.object({
 });
 
 export const featuresDetailsSchema = z.object({
+  totalArea: z.coerce.number({ message: 'Total area is required.' }).positive({ message: 'Area must be greater than 0.' }),
+  totalAreaUnit: z.enum(['sqft', 'sqm', 'acres']).default('sqft'),
+  carpetArea: z.coerce.number().positive({ message: 'Carpet area must be greater than 0.' }).optional().or(z.literal('')),
+  floorNo: z.coerce.number().optional().or(z.literal('')),
+  totalFloors: z.coerce.number().optional().or(z.literal('')),
+  propertyAge: z.enum(['under-construction', 'less-than-1-year', '1-5-years', '5-10-years', '10-plus-years']),
+  furnishing: z.enum(['unfurnished', 'semi-furnished', 'furnished']),
+  parking: z.enum(['none', '1', '2', '2+']).default('none'),
+  facing: z.enum(['east', 'west', 'north', 'south', 'any']).default('any'),
+  availableFrom: z.string().optional(),
   amenities: z.array(z.string()).default([]),
-  bathrooms: z.coerce.number().min(1, { message: 'At least 1 bathroom is required.' }),
-  furnishing: z.string().min(1, { message: 'Furnishing status is required.' }),
-  superArea: z.string().min(1, { message: 'Super area is required.' }),
 });
 
 export const photosDetailsSchema = z.object({

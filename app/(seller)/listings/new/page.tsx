@@ -43,10 +43,17 @@ export default function NewPropertyListingPage() {
         lng: 77.0266
       },
       featuresDetails: {
+        totalArea: undefined as unknown as number,
+        totalAreaUnit: 'sqft',
+        carpetArea: '' as unknown as number,
+        floorNo: '' as unknown as number,
+        totalFloors: '' as unknown as number,
+        propertyAge: '1-5-years',
+        furnishing: 'semi-furnished',
+        parking: 'none',
+        facing: 'any',
+        availableFrom: '',
         amenities: [],
-        bathrooms: 2,
-        furnishing: 'Semi-Furnished',
-        superArea: ''
       },
       photosDetails: {
         images: [],
@@ -58,7 +65,7 @@ export default function NewPropertyListingPage() {
     }
   });
 
-  const { register, setValue, watch, formState: { errors }, trigger, handleSubmit } = form;
+  const { register, setValue, watch, formState: { errors }, trigger, handleSubmit, setError, clearErrors } = form;
 
   const steps = ['Basic Info', 'Location', 'Features', 'Photos', 'Pricing', 'Review'];
 
@@ -174,6 +181,8 @@ export default function NewPropertyListingPage() {
                 watch={watch} 
                 errors={errors} 
                 trigger={trigger} 
+                setError={setError}
+                clearErrors={clearErrors}
                 onNext={handleNextStep} 
                 onBack={handleBackStep} 
               />
