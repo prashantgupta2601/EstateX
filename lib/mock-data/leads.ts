@@ -1,6 +1,14 @@
 export type LeadSource = 'website' | 'whatsapp' | 'call' | 'email';
 export type LeadStatus = 'new' | 'contacted' | 'interested' | 'not_interested' | 'converted';
 
+export interface LeadTimelineEvent {
+  id: string;
+  type: 'system' | 'status_change' | 'note';
+  title: string;
+  description?: string;
+  timestamp: string;
+}
+
 export interface Lead {
   id: string;
   propertyId: string;
@@ -14,6 +22,7 @@ export interface Lead {
   status: LeadStatus;
   createdAt: string;
   lastUpdated: string;
+  timeline?: LeadTimelineEvent[];
 }
 
 export const mockLeads: Lead[] = [
