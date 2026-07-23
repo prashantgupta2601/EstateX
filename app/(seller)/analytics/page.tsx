@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ConversionFunnel } from '@/components/seller/analytics/conversion-funnel';
 import { SourceBreakdown } from '@/components/seller/analytics/source-breakdown';
 import { LeadsOverTime } from '@/components/seller/analytics/leads-over-time';
+import { PropertyPerformance } from '@/components/seller/analytics/property-performance';
 
 type TimeRange = '7d' | '30d' | '90d' | '1y';
 
@@ -223,6 +224,9 @@ export default function AnalyticsDashboardPage() {
         <SourceBreakdown timeRange={timeRange} />
         <LeadsOverTime timeRange={timeRange} />
       </div>
+
+      {/* Per-Property Performance Analytics Section */}
+      <PropertyPerformance />
 
     </div>
   );
