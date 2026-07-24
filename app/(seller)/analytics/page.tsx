@@ -21,6 +21,8 @@ import { ConversionFunnel } from '@/components/seller/analytics/conversion-funne
 import { SourceBreakdown } from '@/components/seller/analytics/source-breakdown';
 import { LeadsOverTime } from '@/components/seller/analytics/leads-over-time';
 import { PropertyPerformance } from '@/components/seller/analytics/property-performance';
+import { SubscriptionStats } from '@/components/seller/analytics/subscription-stats';
+import { RevenueChart } from '@/components/seller/analytics/revenue-chart';
 
 type TimeRange = '7d' | '30d' | '90d' | '1y';
 
@@ -227,6 +229,12 @@ export default function AnalyticsDashboardPage() {
 
       {/* Per-Property Performance Analytics Section */}
       <PropertyPerformance />
+
+      {/* Revenue Analytics Chart */}
+      <RevenueChart />
+
+      {/* Subscription Usage & Billing History */}
+      <SubscriptionStats />
 
     </div>
   );
