@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Toaster } from '@/components/ui/toast';
 import { sellerProfile } from '@/lib/mock-data/seller';
+import { NotificationBellDropdown } from '@/components/seller/notification-bell-dropdown';
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -76,6 +77,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
       else if (part === 'profile') label = 'Profile & KYC';
       else if (part === 'subscription') label = 'Subscription';
       else if (part === 'notifications') label = 'Notifications';
+      else if (part === 'settings') label = 'Settings';
       
       crumbs.push({
         label,
@@ -165,15 +167,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
 
           {/* Quick Actions & Notifications */}
           <div className="flex items-center gap-2.5">
-            <Link href="/seller/notifications">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl border border-border/80 text-muted-foreground hover:text-foreground cursor-pointer relative">
-                <Bell className="h-4.5 w-4.5" />
-                <span className="absolute top-2.5 right-2.5 flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-450 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                </span>
-              </Button>
-            </Link>
+            <NotificationBellDropdown />
 
             <Link href="/seller/listings/new">
               <Button className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-4 shadow-xs hover:shadow-md hover:scale-[1.01] transition-all cursor-pointer flex items-center gap-1.5 h-9 text-xs">
