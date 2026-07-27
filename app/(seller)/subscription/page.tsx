@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/toast';
 import { subscriptionPlans, SubscriptionPlan } from '@/lib/data/plans';
+import { PlanComparisonTable } from '@/components/seller/subscription/plan-comparison-table';
+import { SubscriptionFaq } from '@/components/seller/subscription/subscription-faq';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -322,6 +324,18 @@ export default function SubscriptionPricingPage() {
           );
         })}
       </div>
+
+      {/* Plan Comparison Table */}
+      <PlanComparisonTable
+        currentPlanId={currentPlanId}
+        onSelectPlan={(planId) => {
+          const targetPlan = subscriptionPlans.find((p) => p.id === planId);
+          if (targetPlan) handleSelectPlan(targetPlan);
+        }}
+      />
+
+      {/* Trust Badges Row & FAQ */}
+      <SubscriptionFaq />
 
     </div>
   );
