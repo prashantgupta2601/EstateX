@@ -21,6 +21,7 @@ import { toast } from '@/components/ui/toast';
 import { subscriptionPlans, SubscriptionPlan } from '@/lib/data/plans';
 import { PlanComparisonTable } from '@/components/seller/subscription/plan-comparison-table';
 import { SubscriptionFaq } from '@/components/seller/subscription/subscription-faq';
+import { CheckoutButton } from '@/components/seller/subscription/checkout-button';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -286,17 +287,7 @@ export default function SubscriptionPricingPage() {
 
               {/* Action Footer */}
               <CardFooter className="p-6 pt-4 border-t border-border/40">
-                {isCurrent ? (
-                  <Button
-                    onClick={() => handleSelectPlan(plan)}
-                    disabled={isProcessing === plan.id}
-                    variant="outline"
-                    className="w-full h-11 rounded-2xl font-extrabold text-xs border-primary/50 hover:bg-primary/5 text-primary cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>{isProcessing === plan.id ? 'Renewing...' : 'Renew Current Plan'}</span>
-                  </Button>
-                ) : plan.id === 'free' ? (
+                {plan.id === 'free' ? (
                   <Button
                     disabled
                     variant="outline"
@@ -304,10 +295,20 @@ export default function SubscriptionPricingPage() {
                   >
                     Free Plan
                   </Button>
+                ) : isCurrent ? (
+                  <CheckoutButton
+                    plan={plan}
+                    billingCycle={billingCycle}
+                    variant="outline"
+                    className="w-full h-11 rounded-2xl font-extrabold text-xs border-primary/50 hover:bg-primary/5 text-primary cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>Renew Current Plan</span>
+                  </CheckoutButton>
                 ) : (
-                  <Button
-                    onClick={() => handleSelectPlan(plan)}
-                    disabled={isProcessing === plan.id}
+                  <CheckoutButton
+                    plan={plan}
+                    billingCycle={billingCycle}
                     className={`w-full h-11 rounded-2xl font-extrabold text-xs cursor-pointer shadow-md transition-all flex items-center justify-center gap-2 ${
                       isPopular
                         ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 hover:scale-[1.01]'
@@ -315,8 +316,8 @@ export default function SubscriptionPricingPage() {
                     }`}
                   >
                     <Zap className="h-4 w-4 fill-current" />
-                    <span>{isProcessing === plan.id ? 'Processing...' : `Upgrade to ${plan.name}`}</span>
-                  </Button>
+                    <span>Upgrade to {plan.name}</span>
+                  </CheckoutButton>
                 )}
               </CardFooter>
 
