@@ -246,7 +246,8 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: SidebarContentProps
       title: 'ACCOUNT',
       items: [
         { label: 'Profile & KYC', icon: UserCheck, href: '/seller/profile' },
-        { label: 'Subscription Plan', icon: CreditCard, href: '/seller/subscription' },
+        { label: 'Subscription Plans', icon: CreditCard, href: '/seller/subscription' },
+        { label: 'Manage Subscription', icon: CreditCard, href: '/subscription/manage' },
         { label: 'Notifications', icon: Bell, href: '/seller/notifications' },
         { label: 'Logout', icon: LogOut, href: '#logout', isAction: true },
       ],

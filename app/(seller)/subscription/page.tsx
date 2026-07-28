@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Check, 
   X, 
@@ -12,7 +13,8 @@ import {
   PhoneCall, 
   BarChart2, 
   Headphones,
-  CheckCircle2
+  CheckCircle2,
+  Settings
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,13 @@ export default function SubscriptionPricingPage() {
         <p className="text-sm md:text-base text-muted-foreground max-w-xl">
           Grow your real estate business with the right plan. Unlock premium lead access, featured placements, and detailed analytics.
         </p>
+
+        <Link href="/subscription/manage" className="mt-1">
+          <Button variant="outline" size="sm" className="rounded-xl font-bold text-xs gap-2 border-primary/40 text-primary hover:bg-primary/5 cursor-pointer">
+            <Settings className="h-3.5 w-3.5" />
+            <span>Manage My Active Subscription</span>
+          </Button>
+        </Link>
 
         {/* Billing Cycle Toggle Switch */}
         <div className="mt-4 flex items-center gap-3 p-1.5 bg-muted/50 rounded-2xl border border-border/40">
