@@ -270,7 +270,7 @@ export default function ManageSubscriptionPage() {
     try {
       localStorage.setItem('estatex_current_plan', planId);
     } catch (e) {}
-    toast(`Simulated view as ${planId.toUpperCase()} Plan`, 'info');
+    toast(`Simulated view as ${planId.toUpperCase()} Plan`, 'success');
   };
 
   // Higher tiers available for upgrade

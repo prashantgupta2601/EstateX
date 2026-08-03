@@ -42,7 +42,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (validateForm()) {
       console.log('Login attempt:', { email, password, rememberMe });
-      toast('Login successful (mock)');
+      document.cookie = 'seller_session=true; path=/; max-age=86400';
+      toast('Login successful (mock)', 'success');
       router.push('/dashboard');
     }
   };
