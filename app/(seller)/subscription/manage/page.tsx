@@ -26,7 +26,8 @@ import {
   PhoneCall,
   BarChart2,
   Loader2,
-  Percent
+  Percent,
+  SlidersHorizontal
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,8 +75,8 @@ export default function ManageSubscriptionPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Billing calculation constants (Mock billing cycle)
-  const daysRemaining = 15;
+  // Billing calculation constants (Mock billing cycle - 5 days remaining triggers Renew Early)
+  const daysRemaining = 5;
   const totalDaysInPeriod = 30;
   const nextBillingDate = 'August 28, 2026';
   const paymentMethod = 'Visa ending in 4242';
@@ -91,13 +92,13 @@ export default function ManageSubscriptionPage() {
   const currentPlan = subscriptionPlans.find((p) => p.id === currentPlanId) || subscriptionPlans[2]; // Default Pro
 
   // Usage statistics based on current plan limits
-  const listingsUsed = 8;
+  const listingsUsed = currentPlan.id === 'free' ? 2 : currentPlan.id === 'basic' ? 7 : 12;
   const listingsLimit = currentPlan.listingsLimit;
   const listingsPercentage = listingsLimit === 999 
     ? Math.min(100, Math.round((listingsUsed / 20) * 100)) 
     : Math.min(100, Math.round((listingsUsed / listingsLimit) * 100));
 
-  const featuredUsed = currentPlan.id === 'pro' ? 4 : currentPlan.id === 'basic' ? 1 : 0;
+  const featuredUsed = currentPlan.id === 'pro' ? 3 : currentPlan.id === 'basic' ? 1 : 0;
   const featuredLimit = currentPlan.featuredListings;
   const featuredPercentage = featuredLimit === 0 ? 0 : Math.min(100, Math.round((featuredUsed / featuredLimit) * 100));
 
@@ -262,6 +263,16 @@ export default function ManageSubscriptionPage() {
     }
   };
 
+  // Switch plan for demo testing
+  const handleSwitchDemoPlan = (planId: 'free' | 'basic' | 'pro') => {
+    setCurrentPlanId(planId);
+    setPendingDowngrade(null);
+    try {
+      localStorage.setItem('estatex_current_plan', planId);
+    } catch (e) {}
+    toast(`Simulated view as ${planId.toUpperCase()} Plan`, 'info');
+  };
+
   // Higher tiers available for upgrade
   const higherTiers = subscriptionPlans.filter((p) => {
     if (currentPlanId === 'free') return p.id === 'basic' || p.id === 'pro';
@@ -279,7 +290,7 @@ export default function ManageSubscriptionPage() {
   return (
     <div className="flex flex-col gap-8 text-left w-full max-w-5xl mx-auto pb-16 animate-in fade-in duration-300">
       
-      {/* Top Header Navigation */}
+      {/* Top Header Navigation & Plan Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground mb-1">
@@ -294,12 +305,34 @@ export default function ManageSubscriptionPage() {
           </h1>
         </div>
 
-        <Link href="/subscription">
-          <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-2 cursor-pointer">
-            <ArrowLeft className="h-4 w-4" />
-            <span>View All Plans & Features</span>
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* Simulation Toggle Bar */}
+          <div className="hidden md:flex items-center gap-1 p-1 bg-muted/60 rounded-xl border border-border/50 text-[11px] font-bold">
+            <span className="px-2 text-muted-foreground flex items-center gap-1 text-[10px] uppercase font-black">
+              <SlidersHorizontal className="h-3 w-3" /> State:
+            </span>
+            {(['free', 'basic', 'pro'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => handleSwitchDemoPlan(p)}
+                className={`px-2.5 py-1 rounded-lg transition-all capitalize cursor-pointer ${
+                  currentPlanId === p 
+                    ? 'bg-primary text-primary-foreground font-black shadow-xs' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <Link href="/subscription">
+            <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold gap-2 cursor-pointer">
+              <ArrowLeft className="h-4 w-4" />
+              <span>View All Plans</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Auto-Renewal / Cancellation Warning Banner */}
@@ -482,7 +515,7 @@ export default function ManageSubscriptionPage() {
             {/* Action Buttons Footer */}
             <CardFooter className="p-6 pt-4 bg-muted/20 border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-                {/* Upgrade Plan Button */}
+                {/* Upgrade Plan Button (If not on Pro) */}
                 {currentPlanId !== 'pro' && (
                   <Button
                     onClick={() => setIsPlanModalOpen(true)}
@@ -493,19 +526,21 @@ export default function ManageSubscriptionPage() {
                   </Button>
                 )}
 
-                {/* Renew Early Button */}
-                <Button
-                  variant="outline"
-                  onClick={() => handleUpgradeCheckout(currentPlan, currentPlan.price)}
-                  disabled={isProcessing}
-                  className="rounded-2xl border-border/80 font-extrabold text-xs h-11 px-4 cursor-pointer flex items-center gap-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} />
-                  <span>Renew Early</span>
-                </Button>
+                {/* Renew Early Button (If < 7 days left) */}
+                {daysRemaining < 7 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleUpgradeCheckout(currentPlan, currentPlan.price)}
+                    disabled={isProcessing}
+                    className="rounded-2xl border-border/80 font-extrabold text-xs h-11 px-4 cursor-pointer flex items-center gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isProcessing ? 'animate-spin' : ''}`} />
+                    <span>Renew Early</span>
+                  </Button>
+                )}
               </div>
 
-              {/* Cancel Subscription Button */}
+              {/* Cancel Subscription Button (Danger, Outline) */}
               {!isCancelled && (
                 <Button
                   variant="outline"
@@ -603,7 +638,7 @@ export default function ManageSubscriptionPage() {
           <DialogHeader className="text-left gap-1">
             <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
               <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-              <span>Change Subscription Plan</span>
+              <span>Upgrade Subscription Plan</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Select a tier to upgrade immediately with prorated billing, or schedule a downgrade for your next cycle.
@@ -638,7 +673,7 @@ export default function ManageSubscriptionPage() {
                           ₹{plan.price.toLocaleString()} / month • {plan.listingsLimit === 999 ? 'Unlimited' : plan.listingsLimit} listings
                         </span>
 
-                        {/* Proration Explanation */}
+                        {/* Exact Proration Statement as per Requirements */}
                         <div className="mt-2.5 p-2.5 rounded-xl bg-background border border-border/50 text-[11px] font-bold text-foreground">
                           You&apos;ll pay <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{proratedDiff.toLocaleString()}</span> today for the remaining {daysRemaining} days, then ₹{plan.price.toLocaleString()}/month.
                         </div>
@@ -652,7 +687,7 @@ export default function ManageSubscriptionPage() {
                         {isProcessing ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          `Confirm Upgrade (₹${proratedDiff.toLocaleString()})`
+                          'Confirm Upgrade'
                         )}
                       </Button>
                     </div>
@@ -661,7 +696,7 @@ export default function ManageSubscriptionPage() {
               </div>
             )}
 
-            {/* Lower Tiers (Downgrade Options) */}
+            {/* Lower Tiers (Downgrade Options - Switch to Basic/Free) */}
             {lowerTiers.length > 0 && (
               <div className="flex flex-col gap-2 pt-2 border-t border-border/40">
                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider text-left">
@@ -674,9 +709,9 @@ export default function ManageSubscriptionPage() {
                     className="p-3.5 rounded-2xl border border-border/60 bg-muted/20 flex items-center justify-between gap-3"
                   >
                     <div className="flex flex-col text-left">
-                      <span className="font-extrabold text-xs text-foreground">Switch to {plan.name} Plan</span>
+                      <span className="font-extrabold text-xs text-foreground">Switch to {plan.name}</span>
                       <span className="text-[11px] text-muted-foreground">
-                        ₹{plan.price.toLocaleString()} / month ({plan.listingsLimit} listings)
+                        ₹{plan.price.toLocaleString()} / month ({plan.listingsLimit === 999 ? 'Unlimited' : plan.listingsLimit} listings)
                       </span>
                     </div>
 
@@ -689,7 +724,7 @@ export default function ManageSubscriptionPage() {
                       }}
                       className="rounded-xl border-border/80 font-bold text-xs cursor-pointer shrink-0"
                     >
-                      Downgrade to {plan.name}
+                      Switch to {plan.name}
                     </Button>
                   </div>
                 ))}
@@ -720,7 +755,7 @@ export default function ManageSubscriptionPage() {
               <span>Confirm Scheduled Downgrade</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground pt-2 leading-relaxed">
-              Your plan will be downgraded to <strong className="text-foreground">{targetDowngradePlan?.name} Plan</strong> at the end of your current billing period on <strong className="text-foreground">{nextBillingDate}</strong>. You&apos;ll retain {currentPlan.name} features until then.
+              Your plan will be downgraded to <strong className="text-foreground">{targetDowngradePlan?.name}</strong> at the end of your current billing period on <strong className="text-foreground">{nextBillingDate}</strong>. You&apos;ll retain {currentPlan.name} features until then.
             </DialogDescription>
           </DialogHeader>
 
@@ -851,7 +886,7 @@ export default function ManageSubscriptionPage() {
                   onClick={handleClaimRetentionOffer}
                   className="w-full mt-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs h-10 cursor-pointer shadow-md"
                 >
-                  Claim Offer & Save 20%
+                  Claim Offer
                 </Button>
               </div>
 
