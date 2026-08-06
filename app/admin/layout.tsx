@@ -52,7 +52,7 @@ const adminNavSections: NavSection[] = [
   {
     title: 'MODERATION',
     items: [
-      { label: 'Listing Approvals', href: '/admin/approvals', icon: ClipboardCheck },
+      { label: 'Listing Approvals', href: '/admin/listings', icon: ClipboardCheck },
       { label: 'Reported Content', href: '/admin/reports', icon: Flag },
       { label: 'Broker Verification', href: '/admin/verifications', icon: UserCheck },
     ],
