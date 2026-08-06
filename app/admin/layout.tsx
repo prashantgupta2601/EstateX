@@ -114,6 +114,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       else if (part === 'verifications') label = 'Broker Verification';
       else if (part === 'subscription-plans') label = 'Subscription Plans';
       else if (part === 'logs') label = 'Activity Logs';
+      else if (part === 'notifications') label = 'Notifications';
+      else if (part === 'settings') label = 'Site Settings';
+      else if (part === 'revenue') label = 'Revenue';
 
       crumbs.push({ label, href: currentPath });
     });
@@ -177,6 +180,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-3">
+            {/* Notification Bell Button */}
+            <Link
+              href="/admin/notifications"
+              className="relative p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all border border-slate-700/60 cursor-pointer"
+              title="Admin Notifications"
+            >
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-amber-500 text-[10px] font-black text-slate-950 flex items-center justify-center border border-slate-900 shadow-sm">
+                4
+              </span>
+            </Link>
+
             {/* View Live Site Button */}
             <a
               href="/"
@@ -243,7 +258,7 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: SidebarContentProps
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
         {adminNavSections.map((section) => (
           <div key={section.title} className="flex flex-col gap-1.5">
-            <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
+            <span className="px-3 text-[10px] font-black uppercase tracking-wider text-white/50">
               {section.title}
             </span>
             <div className="flex flex-col gap-1">
@@ -256,13 +271,13 @@ function SidebarContent({ pathname, onLogout, onLinkClick }: SidebarContentProps
                     key={item.href}
                     href={item.href}
                     onClick={onLinkClick}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
                       isActive
-                        ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/10'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                        ? 'bg-white/10 text-white font-bold border-l-4 border-amber-400 shadow-md shadow-amber-500/10'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-amber-400' : 'text-slate-400'}`} />
                     <span>{item.label}</span>
                   </Link>
                 );
