@@ -1,12 +1,20 @@
 'use client';
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
-import { ChevronRight, ChevronLeft, IndianRupee, Video, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, IndianRupee, Video, X, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import PricePredictor from '@/components/tools/price-predictor';
 import { useDropzone, FileRejection } from 'react-dropzone';
 import { ListingFormValues } from '@/lib/validations/listing-form';
 
@@ -140,6 +148,27 @@ export default function StepPricing({
     setValue('pricingDetails.preferredContactTime', val, { shouldValidate: true });
   };
 
+  const [isPredictorOpen, setIsPredictorOpen] = useState(false);
+
+  const initialPredictorValues = {
+    propertyType: watch('basicDetails.propertyType') || 'apartment',
+    bhk: watch('basicDetails.bhk') || '3',
+    area: watch('featuresDetails.totalArea') || '1200',
+    city: watch('locationDetails.city') || '',
+    locality: watch('locationDetails.locality') || '',
+    floor: watch('featuresDetails.floorNo') || '',
+    furnishing: watch('featuresDetails.furnishing') || 'semi-furnished',
+    propertyAge: watch('featuresDetails.propertyAge') || '1-5-years',
+    facing: watch('featuresDetails.facing') || 'east',
+    amenities: watch('featuresDetails.amenities') || [],
+  };
+
+  const handleApplyEstimatedPrice = (estimatedPrice: number) => {
+    setValue('pricingDetails.price', estimatedPrice, { shouldValidate: true });
+    setIsPredictorOpen(false);
+    toast(`Applied AI estimated price: ₹ ${estimatedPrice.toLocaleString('en-IN')}`, 'success');
+  };
+
   const handleNext = async () => {
     const isValid = await trigger('pricingDetails');
     if (isValid) {
@@ -159,7 +188,37 @@ export default function StepPricing({
 
       {/* SECTION 1: PRICING DETAILS */}
       <div className="flex flex-col gap-4 border border-border/30 bg-muted/10 p-5 rounded-2xl">
-        <h3 className="text-sm font-bold text-foreground">Expected Price Details</h3>
+        <div className="flex justify-between items-center flex-wrap gap-2">
+          <h3 className="text-sm font-bold text-foreground">Expected Price Details</h3>
+
+          <Sheet open={isPredictorOpen} onOpenChange={setIsPredictorOpen}>
+            <SheetTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs font-bold rounded-xl border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  <span>Get AI Price Estimate ✨</span>
+                </Button>
+              }
+            />
+            <SheetContent side="right" className="p-6 overflow-y-auto max-w-2xl w-full sm:max-w-2xl">
+              <SheetHeader className="text-left border-b pb-4 mb-4">
+                <SheetTitle className="flex items-center gap-2 text-primary">
+                  <Sparkles className="h-5 w-5" />
+                  <span>AI Property Price Predictor</span>
+                </SheetTitle>
+              </SheetHeader>
+              <PricePredictor
+                initialValues={initialPredictorValues}
+                onApplyPrice={handleApplyEstimatedPrice}
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Expected Price */}

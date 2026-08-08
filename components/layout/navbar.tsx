@@ -31,6 +31,7 @@ export default function Navbar() {
       href: '/compare' 
     },
     { label: 'EMI Calculator', href: '/emi-calculator' },
+    { label: 'Price Predictor ✨', href: '/tools/price-predictor' },
   ];
 
   return (
