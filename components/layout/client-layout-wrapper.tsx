@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import Navbar from './navbar';
 import Footer from './footer';
+import AiChatWidget from '@/components/chat/ai-chat-widget';
 
 interface ClientLayoutWrapperProps {
   children: React.ReactNode;
@@ -26,6 +27,10 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     pathname.startsWith('/reset-password') ||
     pathname.startsWith('/verify-otp');
 
+  const isExcludedFromChat = 
+    pathname.startsWith('/admin') || 
+    pathname.startsWith('/seller');
+
   if (hideLayout) {
     return <>{children}</>;
   }
@@ -35,6 +40,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
       <Navbar />
       {children}
       <Footer />
+      {!isExcludedFromChat && <AiChatWidget />}
     </>
   );
 }
