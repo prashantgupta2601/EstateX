@@ -13,6 +13,7 @@ import { SavedSearch } from '@/lib/mock-data/saved-searches';
 import { Enquiry } from '@/lib/mock-data/enquiries';
 import { PriceAlert } from '@/lib/mock-data/price-alerts';
 import { mockProperties } from '@/lib/mock-data/properties';
+import AiRecommendations from '@/components/home/ai-recommendations';
 
 interface DashboardClientProps {
   searchesPromise: Promise<SavedSearch[]>;
@@ -279,6 +280,11 @@ export default function DashboardClient({
           </Link>
         </div>
       </Card>
+
+      {/* AI Recommendations Section */}
+      <div className="mt-6 rounded-2xl overflow-hidden">
+        <AiRecommendations />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import Hero from '@/components/home/hero';
 import FeaturedProperties from '@/components/home/featured-properties';
+import AiRecommendations from '@/components/home/ai-recommendations';
 import PopularCities from '@/components/home/popular-cities';
 import TrustSection from '@/components/home/trust-section';
 
@@ -12,6 +13,9 @@ export default function HomePage() {
 
       {/* Featured Properties Section */}
       <FeaturedProperties />
+
+      {/* AI Recommendations Section */}
+      <AiRecommendations />
 
       {/* Popular Cities Section */}
       <PopularCities />
