@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Menu, Heart, Accessibility } from 'lucide-react';
+import { Menu, Heart, Accessibility, ChevronDown, Sparkles, Calculator, Scale, BrainCircuit, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -12,6 +12,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useComparison } from '@/lib/hooks/use-comparison';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
 import { useAccessibility } from '@/components/providers/accessibility-provider';
@@ -26,12 +33,6 @@ export default function Navbar() {
     { label: 'Buy', href: '/properties?purpose=buy' },
     { label: 'Rent', href: '/properties?purpose=rent' },
     { label: 'Commercial', href: '/properties?purpose=commercial' },
-    { 
-      label: isMounted && comparison.length > 0 ? `Compare (${comparison.length})` : 'Compare', 
-      href: '/compare' 
-    },
-    { label: 'EMI Calculator', href: '/emi-calculator' },
-    { label: 'Price Predictor ✨', href: '/tools/price-predictor' },
   ];
 
   return (
@@ -50,8 +51,8 @@ export default function Navbar() {
           <span className="text-xl font-bold tracking-tight text-primary">EstateX</span>
         </Link>
 
-        {/* Center: Desktop Nav Links */}
-        <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
+        {/* Center: Desktop Nav Links + Tools Dropdown */}
+        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-muted-foreground">
           {navLinks.map((link) => (
             <Link 
               key={link.href} 
@@ -61,6 +62,53 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+
+          {/* Tools Dropdown Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button type="button" className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer outline-none">
+                  <span>Tools</span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="start" className="w-56 bg-card border border-border/80 shadow-lg rounded-2xl p-1.5 z-50">
+              <DropdownMenuItem className="cursor-pointer font-bold text-xs rounded-xl p-2 focus:bg-primary/10 focus:text-primary">
+                <Link href="/ai-features" className="flex items-center gap-2 w-full">
+                  <BrainCircuit className="h-4 w-4 text-primary" />
+                  <span>AI Features Hub ✨</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer font-bold text-xs rounded-xl p-2 focus:bg-primary/10 focus:text-primary">
+                <Link href="/tools/price-predictor" className="flex items-center gap-2 w-full">
+                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <span>Price Predictor ✨</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1 border-border/40" />
+              <DropdownMenuItem className="cursor-pointer font-bold text-xs rounded-xl p-2 focus:bg-primary/10 focus:text-primary">
+                <Link href="/emi-calculator" className="flex items-center gap-2 w-full">
+                  <Calculator className="h-4 w-4 text-purple-500" />
+                  <span>EMI Calculator</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer font-bold text-xs rounded-xl p-2 focus:bg-primary/10 focus:text-primary">
+                <Link href="/compare" className="flex items-center gap-2 w-full">
+                  <Scale className="h-4 w-4 text-amber-500" />
+                  <span>Compare ({isMounted ? comparison.length : 0})</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Link 
+            href="/ai-features" 
+            className="text-primary font-bold hover:underline flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full text-xs"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>AI Suite ✨</span>
+          </Link>
         </nav>
 
         {/* Right Side: Desktop CTAs & Mobile Hamburger */}
@@ -137,7 +185,48 @@ export default function Navbar() {
                     </Link>
                   ))}
                   
-                  {/* Mobile Wishlist link row with Pill Badge */}
+                  <Link 
+                    href="/ai-features" 
+                    onClick={() => setIsOpen(false)}
+                    className="text-primary font-bold hover:underline transition-colors py-2 border-b border-border/40 flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4" />
+                      <span>AI Features Hub ✨</span>
+                    </span>
+                    <span className="text-[10px] bg-primary/20 text-primary font-black px-2 py-0.5 rounded-full">AI</span>
+                  </Link>
+
+                  <Link 
+                    href="/tools/price-predictor" 
+                    onClick={() => setIsOpen(false)}
+                    className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between"
+                  >
+                    <span>Price Predictor ✨</span>
+                  </Link>
+
+                  <Link 
+                    href="/emi-calculator" 
+                    onClick={() => setIsOpen(false)}
+                    className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between"
+                  >
+                    <span>EMI Calculator</span>
+                  </Link>
+
+                  <Link 
+                    href="/compare" 
+                    onClick={() => setIsOpen(false)}
+                    className="hover:text-primary transition-colors py-2 border-b border-border/40 flex items-center justify-between"
+                  >
+                    <span>Compare</span>
+                    {isMounted && comparison.length > 0 && (
+                      <span className="bg-primary text-primary-foreground text-xs font-black px-2 py-0.5 rounded-full">
+                        {comparison.length}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Mobile Wishlist link row */}
                   <Link 
                     href="/wishlist" 
                     onClick={() => setIsOpen(false)}

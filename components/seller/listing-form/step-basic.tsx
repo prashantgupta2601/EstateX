@@ -2,11 +2,14 @@
 
 import React, { useState } from 'react';
 import { UseFormRegister, UseFormSetValue, UseFormWatch, FieldErrors, UseFormTrigger } from 'react-hook-form';
-import { Building, Trees, Home, Map, Briefcase, Store, Warehouse, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, ChevronRight, Building, Home, Store, LandPlot, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { ListingFormValues } from '@/lib/validations/listing-form';
+import { useAIUsage } from '@/lib/ai/usage-tracker';
+import { useFeatureFlags } from '@/lib/hooks/use-feature-flags';
+import { AIUsageIndicator, AIGeminiAttribution } from '@/components/ai/ai-usage-indicator';
 
 interface StepBasicProps {
   register: UseFormRegister<ListingFormValues>;
@@ -17,6 +20,16 @@ interface StepBasicProps {
   onNext: () => void;
 }
 
+const PROPERTY_TYPES = [
+  { value: 'apartment', label: 'Apartment', icon: Building },
+  { value: 'villa', label: 'Villa', icon: Home },
+  { value: 'independent-house', label: 'Independent House', icon: Home },
+  { value: 'plot', label: 'Plot', icon: LandPlot },
+  { value: 'commercial', label: 'Commercial', icon: Store },
+];
+
+const BHK_OPTIONS = ['1', '2', '3', '4', '5+'];
+
 export default function StepBasic({
   register,
   setValue,
@@ -25,15 +38,15 @@ export default function StepBasic({
   trigger,
   onNext
 }: StepBasicProps) {
-  // Watch basic details for interactive state
   const listingType = watch('basicDetails.listingType');
   const propertyType = watch('basicDetails.propertyType');
   const selectedBhk = watch('basicDetails.bhk');
+  const title = watch('basicDetails.title') || '';
   const description = watch('basicDetails.description') || '';
-
-  // Watch additional details for AI generation prompt
-  const city = watch('locationDetails.city');
-  const locality = watch('locationDetails.locality');
+  
+  // Extra fields for AI context if filled in later steps
+  const city = watch('locationDetails.city') || 'Gurugram';
+  const locality = watch('locationDetails.locality') || '';
   const area = watch('featuresDetails.totalArea');
   const amenities = watch('featuresDetails.amenities');
   const furnishing = watch('featuresDetails.furnishing');
@@ -41,57 +54,24 @@ export default function StepBasic({
   const facing = watch('featuresDetails.facing');
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState(false);
 
-  const propertyTypes = [
-    { value: 'apartment', label: 'Apartment', icon: Building },
-    { value: 'villa', label: 'Villa', icon: Trees },
-    { value: 'independent-house', label: 'Independent House', icon: Home },
-    { value: 'plot', label: 'Plot', icon: Map },
-    { value: 'office', label: 'Office', icon: Briefcase },
-    { value: 'shop', label: 'Shop', icon: Store },
-    { value: 'warehouse', label: 'Warehouse', icon: Warehouse }
-  ];
+  const { isFeatureEnabled, aiFeatures } = useFeatureFlags();
+  const descUsage = useAIUsage('descriptionGenerations');
 
-  const bhkOptions = ['1', '2', '3', '4', '4+'];
+  const isFeatureAllowed = aiFeatures && isFeatureEnabled('ai-description');
+  const isAiEnabled = Boolean(propertyType && city && isFeatureAllowed && descUsage.canUse);
 
-  // Determine whether to show BHK selector (hidden for commercial / plot)
-  const isResidential = ['apartment', 'villa', 'independent-house'].includes(propertyType);
-  const showBhk = isResidential;
-
-  // AI button is enabled when propertyType, bhk (if residential), city, locality are filled
-  const isAiEnabled = Boolean(
-    propertyType &&
-    city?.trim() &&
-    locality?.trim() &&
-    (!showBhk || selectedBhk)
-  );
-
-  const handleListingTypeSelect = (type: 'sale' | 'rent' | 'commercial') => {
+  const handleListingTypeSelect = (type: 'sale' | 'rent') => {
     setValue('basicDetails.listingType', type, { shouldValidate: true });
-    
-    // Auto-select logical property type defaults
-    if (type === 'commercial' && !['office', 'shop', 'warehouse'].includes(propertyType)) {
-      setValue('basicDetails.propertyType', 'office', { shouldValidate: true });
-    } else if (type !== 'commercial' && ['office', 'shop', 'warehouse'].includes(propertyType)) {
-      setValue('basicDetails.propertyType', 'apartment', { shouldValidate: true });
-    }
   };
 
   const handlePropertyTypeSelect = (type: string) => {
     setValue('basicDetails.propertyType', type, { shouldValidate: true });
-    
-    // Auto-adjust listing type
-    if (['office', 'shop', 'warehouse'].includes(type)) {
-      setValue('basicDetails.listingType', 'commercial', { shouldValidate: true });
-    } else if (listingType === 'commercial') {
-      setValue('basicDetails.listingType', 'sale', { shouldValidate: true });
-    }
-
-    // Clear BHK if not residential
     if (!['apartment', 'villa', 'independent-house'].includes(type)) {
       setValue('basicDetails.bhk', undefined, { shouldValidate: true });
     } else if (!selectedBhk) {
-      setValue('basicDetails.bhk', '3', { shouldValidate: true }); // Default to 3 BHK
+      setValue('basicDetails.bhk', '3', { shouldValidate: true });
     }
   };
 
@@ -103,12 +83,12 @@ export default function StepBasic({
     if (!isAiEnabled || isGenerating) return;
 
     setIsGenerating(true);
+    setGenerationError(false);
     try {
+      descUsage.increment();
       const response = await fetch('/api/ai/generate-description', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           propertyType,
           bhk: selectedBhk || 'N/A',
@@ -125,14 +105,15 @@ export default function StepBasic({
       const data = await response.json();
 
       if (!response.ok || !data.description) {
-        throw new Error(data.error || 'Failed to generate description');
+        throw new Error(data.error || 'AI temporarily unavailable. Please try again.');
       }
 
       setValue('basicDetails.description', data.description, { shouldValidate: true });
-      toast('Description generated by AI. Review and edit as needed.', 'success');
-    } catch (error) {
+      toast('Description generated by Gemini AI ✨. Review and edit as needed.', 'success');
+    } catch (error: unknown) {
+      setGenerationError(true);
       console.error('AI description generation error:', error);
-      toast('AI generation failed. Please write manually.', 'error');
+      toast('AI temporarily unavailable. Please try again.', 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -150,119 +131,120 @@ export default function StepBasic({
   return (
     <div className="flex flex-col gap-6 py-2 animate-in fade-in duration-300">
       
-      {/* 1. Listing Type Selection */}
+      {/* 1. Listing Purpose Selector */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Listing Type</label>
-        <div className="grid grid-cols-3 gap-3">
-          {([
-            { value: 'sale', label: 'For Sale', desc: 'Sell your property' },
-            { value: 'rent', label: 'For Rent', desc: 'Rent out your property' },
-            { value: 'commercial', label: 'Commercial', desc: 'Offices, shops, etc' }
-          ] as const).map(item => {
-            const isSelected = listingType === item.value;
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-left">
+          Listing Purpose <span className="text-destructive">*</span>
+        </label>
+        <div className="grid grid-cols-2 gap-3 max-w-sm">
+          <button
+            type="button"
+            onClick={() => handleListingTypeSelect('sale')}
+            className={`py-3 px-4 rounded-xl border text-xs font-extrabold transition-all cursor-pointer select-none ${
+              listingType === 'sale'
+                ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                : 'bg-background border-border/80 hover:border-border text-foreground'
+            }`}
+          >
+            Sell Property
+          </button>
+          <button
+            type="button"
+            onClick={() => handleListingTypeSelect('rent')}
+            className={`py-3 px-4 rounded-xl border text-xs font-extrabold transition-all cursor-pointer select-none ${
+              listingType === 'rent'
+                ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                : 'bg-background border-border/80 hover:border-border text-foreground'
+            }`}
+          >
+            Rent / Lease
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Property Type */}
+      <div className="flex flex-col gap-2">
+        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-left">
+          Property Type <span className="text-destructive">*</span>
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {PROPERTY_TYPES.map((pt) => {
+            const Icon = pt.icon;
+            const isSelected = propertyType === pt.value;
             return (
               <button
-                key={item.value}
+                key={pt.value}
                 type="button"
-                onClick={() => handleListingTypeSelect(item.value)}
-                className={`p-4.5 rounded-2xl border text-center flex flex-col items-center gap-1.5 cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-primary bg-primary/5 text-primary ring-2 ring-primary/10' 
-                    : 'border-border/80 hover:bg-muted/20 text-foreground'
+                onClick={() => handlePropertyTypeSelect(pt.value)}
+                className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer select-none text-center ${
+                  isSelected
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20 text-primary shadow-xs'
+                    : 'border-border/80 bg-background hover:border-border hover:bg-muted/20 text-foreground'
                 }`}
               >
-                <span className="text-xs font-black">{item.label}</span>
-                <span className="text-[9px] text-muted-foreground leading-none hidden sm:block">{item.desc}</span>
+                <Icon className={`h-5 w-5 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-xs font-bold">{pt.label}</span>
               </button>
             );
           })}
         </div>
-        {errors.basicDetails?.listingType && (
-          <span className="text-[11px] text-destructive font-bold">{errors.basicDetails.listingType.message}</span>
-        )}
       </div>
 
-      {/* 2. Property Type Selection */}
-      <div className="flex flex-col gap-2">
-        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Property Type</label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {propertyTypes.map(item => {
-            const Icon = item.icon;
-            const isSelected = propertyType === item.value;
-            return (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => handlePropertyTypeSelect(item.value)}
-                className={`p-3.5 rounded-2xl border text-center flex flex-col items-center gap-2 cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-primary bg-primary/5 text-primary ring-2 ring-primary/10' 
-                    : 'border-border/80 hover:bg-muted/20 text-foreground'
-                }`}
-              >
-                <div className={`p-2 rounded-xl ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground/80'}`}>
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-                <span className="text-xs font-bold">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        {errors.basicDetails?.propertyType && (
-          <span className="text-[11px] text-destructive font-bold">{errors.basicDetails.propertyType.message}</span>
-        )}
-      </div>
-
-      {/* 3. BHK Selection (Conditional) */}
-      {showBhk && (
-        <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 duration-300">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">BHK (Bedrooms)</label>
-          <div className="flex flex-wrap gap-2">
-            {bhkOptions.map(val => {
-              const isSelected = selectedBhk === val;
+      {/* 3. BHK Configuration */}
+      {['apartment', 'villa', 'independent-house'].includes(propertyType) && (
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-left">
+            Bedrooms (BHK) <span className="text-destructive">*</span>
+          </label>
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+            {BHK_OPTIONS.map((bhkVal) => {
+              const isSelected = selectedBhk === bhkVal;
               return (
                 <button
-                  key={val}
+                  key={bhkVal}
                   type="button"
-                  onClick={() => handleBhkSelect(val)}
-                  className={`px-4.5 py-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'border-primary bg-primary text-primary-foreground font-black shadow-xs' 
-                      : 'border-border/80 hover:border-border text-muted-foreground hover:text-foreground'
+                  onClick={() => handleBhkSelect(bhkVal)}
+                  className={`h-10 min-w-[54px] rounded-xl border text-xs font-black transition-all cursor-pointer select-none flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                      : 'bg-background border-border/80 hover:border-border text-foreground'
                   }`}
                 >
-                  <span>{val} BHK</span>
+                  {bhkVal} BHK
                 </button>
               );
             })}
           </div>
-          {errors.basicDetails?.bhk && (
-            <span className="text-[11px] text-destructive font-bold">{errors.basicDetails.bhk.message}</span>
-          )}
         </div>
       )}
 
-      {/* 4. Title Input */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Property Title</label>
+      {/* 4. Property Title */}
+      <div className="flex flex-col gap-1.5 text-left">
+        <div className="flex justify-between items-center">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Property Title <span className="text-destructive">*</span>
+          </label>
+          <span className="text-[10px] text-muted-foreground font-semibold">
+            {title.length} / 100 chars
+          </span>
+        </div>
         <Input 
-          type="text"
-          placeholder="e.g. Spacious 3 BHK Apartment in DLF Phase 5"
+          placeholder="e.g. Luxurious 3 BHK Apartment with Golf Course View in Sector 54" 
           {...register('basicDetails.title')}
+          maxLength={100}
           className="rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/45 h-11 text-xs font-semibold"
         />
-        {errors.basicDetails?.title ? (
+        {errors.basicDetails?.title && (
           <span className="text-[11px] text-destructive font-bold">{errors.basicDetails.title.message}</span>
-        ) : (
-          <span className="text-[10px] text-muted-foreground">Keep it descriptive, including BHK and project name if possible. (Min 10 characters)</span>
         )}
       </div>
 
-      {/* 5. Description Textarea + AI Generation Button */}
-      <div className="flex flex-col gap-1.5">
+      {/* 5. Description Textarea + AI Generation Button & Usage Limit */}
+      <div className="flex flex-col gap-2 text-left">
         <div className="flex justify-between items-center flex-wrap gap-2">
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Description</label>
           <div className="flex items-center gap-3">
+            <AIUsageIndicator featureKey="descriptionGenerations" showText={true} />
             <Button
               type="button"
               variant="outline"
@@ -271,15 +253,17 @@ export default function StepBasic({
               onClick={handleGenerateAiDescription}
               className="h-8 px-3 text-xs font-bold rounded-xl border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all shadow-xs"
               title={
-                !isAiEnabled
-                  ? 'Please select Property Type, BHK, City, and Locality to generate description with AI'
-                  : 'Generate description using Gemini AI'
+                !isFeatureAllowed
+                  ? 'AI Description Generator is disabled in Admin Settings'
+                  : !descUsage.canUse
+                  ? 'Daily limit reached. Resets at midnight.'
+                  : 'Generate description using Google Gemini AI'
               }
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  <span>Generating...</span>
+                  <span>AI is thinking...</span>
                 </>
               ) : (
                 <>
@@ -289,10 +273,23 @@ export default function StepBasic({
               )}
             </Button>
             <span className={`text-[10px] font-bold ${description.length < 50 ? 'text-amber-500' : 'text-emerald-500'}`}>
-              {description.length} / 2000 chars (Min 50)
+              {description.length} / 2000 chars
             </span>
           </div>
         </div>
+
+        {generationError && (
+          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-between">
+            <span className="flex items-center gap-1.5 font-bold">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              AI temporarily unavailable. Please try again.
+            </span>
+            <Button size="sm" variant="ghost" onClick={handleGenerateAiDescription} className="h-7 text-xs font-bold text-rose-600 hover:bg-rose-500/20">
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+            </Button>
+          </div>
+        )}
+
         <textarea 
           placeholder="Describe the property highlights, nearby landmarks, society security, utilities, furnishing, or lease conditions..."
           {...register('basicDetails.description')}
@@ -302,6 +299,10 @@ export default function StepBasic({
         {errors.basicDetails?.description && (
           <span className="text-[11px] text-destructive font-bold">{errors.basicDetails.description.message}</span>
         )}
+
+        <div className="flex justify-end pt-0.5">
+          <AIGeminiAttribution />
+        </div>
       </div>
 
       {/* Footer navigation */}
@@ -309,7 +310,7 @@ export default function StepBasic({
         <Button 
           type="button" 
           onClick={handleNext}
-          className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold px-6 h-10 text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+          className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold px-6 h-10 text-xs flex items-center gap-1.5 cursor-pointer shadow-xs border-none"
         >
           <span>Next Step</span>
           <ChevronRight className="h-4.5 w-4.5" />

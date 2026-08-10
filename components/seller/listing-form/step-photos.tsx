@@ -43,6 +43,9 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { ListingFormValues } from '@/lib/validations/listing-form';
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+import { useAIUsage } from '@/lib/ai/usage-tracker';
+import { useFeatureFlags } from '@/lib/hooks/use-feature-flags';
+import { AIUsageIndicator, AIGeminiAttribution } from '@/components/ai/ai-usage-indicator';
 
 export interface ImageAnalysis {
   score: number;
@@ -136,6 +139,11 @@ export default function StepPhotos({
 }: StepPhotosProps) {
   const rawImages = watch('photosDetails.images');
   const images = useMemo(() => rawImages || [], [rawImages]);
+
+  const { isFeatureEnabled, aiFeatures } = useFeatureFlags();
+  const visionUsage = useAIUsage('imageAnalyses');
+
+  const isAllowed = aiFeatures && isFeatureEnabled('ai-image-analysis');
   
   // Local state to keep track of file metadata and AI analysis results
   const [imageFiles, setImageFiles] = useState<ImageFile[]>(() => {
@@ -176,7 +184,7 @@ export default function StepPhotos({
 
   // Function to call AI quality checker API for a single image
   const analyzeSingleImage = useCallback(async (file: ImageFile) => {
-    if (file.analysis || file.isAnalyzing || analyzingRef.current.has(file.id)) return;
+    if (!isAllowed || !visionUsage.canUse || file.analysis || file.isAnalyzing || analyzingRef.current.has(file.id)) return;
 
     analyzingRef.current.add(file.id);
     setImageFiles(prev =>
@@ -184,6 +192,7 @@ export default function StepPhotos({
     );
 
     try {
+      visionUsage.increment();
       const { imageBase64, mimeType } = await urlToBase64(file.url);
       const res = await fetch('/api/ai/analyze-image', {
         method: 'POST',
@@ -192,7 +201,7 @@ export default function StepPhotos({
       });
 
       if (!res.ok) {
-        throw new Error(`API returned status ${res.status}`);
+        throw new Error(`AI temporarily unavailable. Please try again.`);
       }
 
       const data: ImageAnalysis = await res.json();
@@ -201,7 +210,7 @@ export default function StepPhotos({
         prev.map(f => (f.id === file.id ? { ...f, analysis: data, isAnalyzing: false } : f))
       );
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Analysis failed';
+      const errorMsg = err instanceof Error ? err.message : 'AI temporarily unavailable. Please try again.';
       console.error(`Failed to analyze image ${file.id}:`, errorMsg);
       setImageFiles(prev =>
         prev.map(f =>
@@ -217,16 +226,17 @@ export default function StepPhotos({
     } finally {
       analyzingRef.current.delete(file.id);
     }
-  }, []);
+  }, [isAllowed, visionUsage]);
 
   // Trigger analysis automatically for any un-analyzed images
   useEffect(() => {
+    if (!isAllowed || !visionUsage.canUse) return;
     imageFiles.forEach(file => {
       if (!file.analysis && !file.isAnalyzing && !analyzingRef.current.has(file.id)) {
         analyzeSingleImage(file);
       }
     });
-  }, [imageFiles, analyzeSingleImage]);
+  }, [imageFiles, analyzeSingleImage, isAllowed, visionUsage.canUse]);
 
   const handleUseSamples = () => {
     const newFiles: ImageFile[] = sampleImages.map((url, idx) => ({
@@ -293,7 +303,7 @@ export default function StepPhotos({
       'image/png': ['.png'],
       'image/webp': ['.webp'],
     },
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 5 * 1024 * 1024,
     maxFiles: 20,
   });
 
@@ -438,7 +448,7 @@ export default function StepPhotos({
         </span>
       )}
 
-      {/* Overall Photo Score Summary Header (Requirement 2 & 4) */}
+      {/* Overall Photo Score Summary Header (Requirement 2, 4 & 5) */}
       {imageFiles.length > 0 && (
         <div className="bg-card border border-border/60 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -480,7 +490,7 @@ export default function StepPhotos({
                 {totalAnalyzed < imageFiles.length ? (
                   <span className="inline-flex items-center gap-1 text-primary font-medium animate-pulse">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Analyzing {imageFiles.length - totalAnalyzed} photo(s) with Gemini Vision...
+                    AI is thinking... ({imageFiles.length - totalAnalyzed} photo(s) left)
                   </span>
                 ) : numericAvg >= 8 ? (
                   'High quality photos boost buyer inquiries by up to 40%!'
@@ -490,29 +500,34 @@ export default function StepPhotos({
                   'Low quality photos detected. Replacing poor photos improves lead conversion.'
                 )}
               </p>
+              <AIGeminiAttribution className="pt-0.5" />
             </div>
           </div>
 
-          {/* Breakdown Badges */}
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
-            {excellentCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="h-3 w-3" />
-                {excellentCount} Excellent
-              </span>
-            )}
-            {goodCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                <Info className="h-3 w-3" />
-                {goodCount} Good
-              </span>
-            )}
-            {poorCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                <AlertTriangle className="h-3 w-3" />
-                {poorCount} Retake Recommended
-              </span>
-            )}
+          {/* Usage Limit & Breakdown Badges */}
+          <div className="flex flex-col items-end gap-2 shrink-0 self-start sm:self-center">
+            <AIUsageIndicator featureKey="imageAnalyses" />
+
+            <div className="flex items-center gap-1.5">
+              {excellentCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle2 className="h-3 w-3" />
+                  {excellentCount} Excellent
+                </span>
+              )}
+              {goodCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <Info className="h-3 w-3" />
+                  {goodCount} Good
+                </span>
+              )}
+              {poorCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  <AlertTriangle className="h-3 w-3" />
+                  {poorCount} Retake
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -700,12 +715,12 @@ function SortableItem({
           </div>
         )}
 
-        {/* AI Loading Spinner Overlay (Requirement 3) */}
+        {/* AI Loading Spinner Overlay (Requirement 3 & 5) */}
         {file.isAnalyzing && (
-          <div className="absolute inset-0 z-20 bg-background/70 backdrop-blur-xs flex flex-col items-center justify-center text-center p-2">
+          <div className="absolute inset-0 z-20 bg-background/75 backdrop-blur-xs flex flex-col items-center justify-center text-center p-2">
             <Loader2 className="h-6 w-6 text-primary animate-spin mb-1" />
-            <span className="text-[10px] font-bold text-foreground">Analyzing Quality...</span>
-            <span className="text-[8px] text-muted-foreground">Gemini Vision AI</span>
+            <span className="text-[10px] font-extrabold text-foreground">AI is thinking...</span>
+            <span className="text-[8px] text-muted-foreground font-semibold">Gemini Vision AI</span>
           </div>
         )}
 
@@ -750,17 +765,20 @@ function SortableItem({
 
         {/* Retry Button if Analysis Failed */}
         {file.analysisError && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRetryAnalysis();
-            }}
-            className="text-[9px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 hover:underline cursor-pointer mt-0.5"
-          >
-            <RefreshCw className="h-3 w-3" />
-            <span>Retry Analysis</span>
-          </button>
+          <div className="flex items-center justify-between mt-0.5 text-rose-600 dark:text-rose-400">
+            <span className="text-[9px] font-bold">AI temporarily unavailable. Please try again.</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRetryAnalysis();
+              }}
+              className="text-[9px] font-extrabold flex items-center gap-1 hover:underline cursor-pointer ml-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              <span>Retry</span>
+            </button>
+          </div>
         )}
 
         {/* Click/Hover to Expand Details (Requirement 2 & Suggestions) */}

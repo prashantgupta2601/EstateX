@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, SlidersHorizontal, Loader2, RefreshCw, ChevronDown, Check, Building, MapPin, Layers, IndianRupee } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, Loader2, RefreshCw, Check, Building, MapPin, Layers, IndianRupee, AlertCircle } from 'lucide-react';
 import PropertyCard from '@/components/property/property-card';
 import { Property } from '@/types/property';
 import { mockProperties } from '@/lib/mock-data/properties';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { useWishlist } from '@/lib/hooks/use-wishlist';
+import { useAIUsage } from '@/lib/ai/usage-tracker';
+import { useFeatureFlags } from '@/lib/hooks/use-feature-flags';
+import { AIUsageIndicator, AIGeminiAttribution } from '@/components/ai/ai-usage-indicator';
 
 interface UserPreferences {
   purpose: 'buy' | 'rent';
@@ -23,25 +25,25 @@ interface UserPreferences {
 
 const CITY_OPTIONS = ['Gurugram', 'New Delhi', 'Mumbai', 'Bengaluru', 'Pune', 'Noida'];
 const BHK_OPTIONS = [1, 2, 3, 4];
-const TYPE_OPTIONS = [
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'house', label: 'Villa/House' },
-  { value: 'commercial', label: 'Commercial' },
-];
 
 const LOCAL_STORAGE_KEY = 'estatex_ai_preferences';
 
 export default function AiRecommendations() {
   const { wishlist } = useWishlist();
+  const { isFeatureEnabled, aiFeatures } = useFeatureFlags();
+  const recUsage = useAIUsage('recommendations');
+
+  const isAllowed = aiFeatures && isFeatureEnabled('ai-recommendations');
   
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // Form draft state
   const [purpose, setPurpose] = useState<'buy' | 'rent'>('buy');
-  const [budgetMin, setBudgetMin] = useState<number>(2000000); // 20 Lacs
-  const [budgetMax, setBudgetMax] = useState<number>(30000000); // 3 Cr
+  const [budgetMin, setBudgetMin] = useState<number>(2000000);
+  const [budgetMax, setBudgetMax] = useState<number>(30000000);
   const [selectedBhk, setSelectedBhk] = useState<number[]>([2, 3]);
   const [selectedCities, setSelectedCities] = useState<string[]>(['Gurugram', 'New Delhi']);
 
@@ -73,8 +75,12 @@ export default function AiRecommendations() {
   }, []);
 
   const fetchRecommendations = async (userPrefs: UserPreferences) => {
+    if (!isAllowed || !recUsage.canUse || isLoading) return;
+
     setIsLoading(true);
+    setHasError(false);
     try {
+      recUsage.increment();
       const response = await fetch('/api/ai/recommendations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,14 +90,18 @@ export default function AiRecommendations() {
             budget: { min: userPrefs.budgetMin, max: userPrefs.budgetMax },
             bhk: userPrefs.bhk,
             cities: userPrefs.cities,
-            propertyTypes: userPrefs.propertyTypes,
-            amenities: userPrefs.amenities,
-            furnishing: userPrefs.furnishing,
+            propertyTypes: userPrefs.propertyTypes || [],
+            amenities: userPrefs.amenities || [],
+            furnishing: userPrefs.furnishing || '',
           },
           viewedPropertyIds: [],
           wishlistPropertyIds: wishlist,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('AI temporarily unavailable. Please try again.');
+      }
 
       const data = await response.json();
       const recIds: string[] = data.recommendedIds || [];
@@ -99,20 +109,20 @@ export default function AiRecommendations() {
 
       setReasons(recReasons);
 
-      // Filter properties matching recommended IDs or fallback
       let matchedProps = mockProperties.filter((p) => recIds.includes(p.id));
 
       if (matchedProps.length === 0) {
-        // Fallback filter if AI API returned empty or mismatch
         matchedProps = mockProperties
           .filter((p) => (userPrefs.purpose === 'buy' ? p.type === 'sale' : p.type === 'rent'))
           .slice(0, 6);
       }
 
       setRecommendations(matchedProps);
+      toast('AI recommendations updated using Gemini!', 'success');
     } catch (error) {
       console.error('Error fetching AI recommendations:', error);
-      toast('Failed to load AI recommendations. Showing featured matches.', 'error');
+      setHasError(true);
+      toast('AI temporarily unavailable. Please try again.', 'error');
       setRecommendations(mockProperties.slice(0, 6));
     } finally {
       setIsLoading(false);
@@ -128,86 +138,94 @@ export default function AiRecommendations() {
       budgetMax,
       bhk: selectedBhk,
       cities: selectedCities,
-      propertyTypes: ['apartment', 'house'],
-      amenities: ['Gym', 'Swimming Pool', 'Security'],
-      furnishing: 'Semi-Furnished',
+      propertyTypes: ['apartment', 'villa'],
+      amenities: [],
+      furnishing: 'any',
     };
 
     setPreferences(newPrefs);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newPrefs));
-    } catch (e) {
-      console.error('Failed to save to localStorage:', e);
-    }
-
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newPrefs));
     setIsFormOpen(false);
     fetchRecommendations(newPrefs);
-    toast('Preferences updated! Generating AI recommendations...', 'success');
-  };
-
-  const toggleBhk = (bhkVal: number) => {
-    setSelectedBhk(prev => 
-      prev.includes(bhkVal) ? prev.filter(b => b !== bhkVal) : [...prev, bhkVal]
-    );
   };
 
   const toggleCity = (city: string) => {
-    setSelectedCities(prev => 
-      prev.includes(city) ? prev.filter(c => c !== city) : [...prev, city]
+    setSelectedCities((prev) =>
+      prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city]
     );
   };
 
-  const formatPriceReadable = (val: number) => {
-    if (purpose === 'rent') {
-      return `₹ ${val.toLocaleString('en-IN')}/mo`;
-    }
-    if (val >= 10000000) {
-      return `₹ ${(val / 10000000).toFixed(2)} Cr`;
-    }
-    if (val >= 100000) {
-      return `₹ ${(val / 100000).toFixed(1)} Lac`;
-    }
-    return `₹ ${val.toLocaleString('en-IN')}`;
+  const toggleBhk = (bhk: number) => {
+    setSelectedBhk((prev) =>
+      prev.includes(bhk) ? prev.filter((b) => b !== bhk) : [...prev, bhk]
+    );
   };
 
   if (!isMounted) return null;
 
   return (
-    <section className="w-full py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-background via-muted/20 to-background border-y border-border/40">
-      <div className="max-w-7xl mx-auto flex flex-col gap-8">
+    <section id="ai-recommendations" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full select-none">
+      <div className="flex flex-col gap-6">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary shrink-0 mt-1">
-              <Sparkles className="h-6 w-6" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/30 pb-4">
+          <div className="flex flex-col gap-1 text-left">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-black text-xs uppercase tracking-wider">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Personalized AI Match</span>
+              </span>
+              {!isAllowed && (
+                <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                  Disabled by Admin
+                </span>
+              )}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase tracking-wider text-primary">AI Matchmaker</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">Live</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                Recommended for You
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Curated property matches generated specifically for your preferences using Gemini AI
-              </p>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Recommended Properties for You
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Smart vector matching based on your saved budget, locality preferences, and wishlist activity.
+            </p>
           </div>
 
-          {preferences && !isFormOpen && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsFormOpen(true)}
-              className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 font-bold text-xs h-9 px-4 flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span>Refine Preferences</span>
-            </Button>
-          )}
+          <div className="flex flex-col sm:items-end gap-2 shrink-0">
+            <div className="flex items-center gap-3">
+              <AIUsageIndicator featureKey="recommendations" />
+              {preferences && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!isAllowed || !recUsage.canUse || isLoading}
+                  onClick={() => setIsFormOpen(true)}
+                  className="rounded-xl border-primary/30 text-primary hover:bg-primary/10 font-bold text-xs h-9 px-4 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <span>Refine Preferences</span>
+                </Button>
+              )}
+            </div>
+            <AIGeminiAttribution />
+          </div>
         </div>
+
+        {/* Error retry bar */}
+        {hasError && (
+          <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              AI temporarily unavailable. Please try again.
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => preferences && fetchRecommendations(preferences)}
+              className="h-7 text-xs font-bold text-rose-600 border-rose-500/30 hover:bg-rose-500/20"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+            </Button>
+          </div>
+        )}
 
         {/* Form Modal / Accordion Card */}
         {isFormOpen && (
@@ -228,7 +246,7 @@ export default function AiRecommendations() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
               
               {/* 1. Purpose Toggle */}
               <div className="flex flex-col gap-1.5">
@@ -263,125 +281,129 @@ export default function AiRecommendations() {
                 </div>
               </div>
 
-              {/* 2. BHK Selection Chips */}
+              {/* 2. Budget Max slider/inputs */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground">BHK Configuration</label>
+                <label className="text-xs font-bold text-muted-foreground flex justify-between">
+                  <span>Max Budget</span>
+                  <span className="text-primary font-black">
+                    {purpose === 'buy'
+                      ? `₹ ${(budgetMax / 100000).toFixed(0)} Lakhs`
+                      : `₹ ${(budgetMax / 1000).toFixed(0)}k/mo`}
+                  </span>
+                </label>
+                <input
+                  type="range"
+                  min={purpose === 'buy' ? 1000000 : 5000}
+                  max={purpose === 'buy' ? 100000000 : 500000}
+                  step={purpose === 'buy' ? 500000 : 5000}
+                  value={budgetMax}
+                  onChange={(e) => setBudgetMax(Number(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary mt-2"
+                />
+              </div>
+
+              {/* 3. Preferred Cities */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground">Target Cities</label>
+                <div className="flex flex-wrap gap-1">
+                  {CITY_OPTIONS.map((c) => {
+                    const isSelected = selectedCities.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => toggleCity(c)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-background border-border/60 text-muted-foreground hover:bg-muted/50'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. BHK Select */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground">Bedrooms (BHK)</label>
                 <div className="flex gap-1.5">
-                  {BHK_OPTIONS.map(val => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => toggleBhk(val)}
-                      className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        selectedBhk.includes(val)
-                          ? 'bg-primary/10 border-primary text-primary font-black'
-                          : 'bg-background border-border/80 text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {val} BHK
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. Budget Range Inputs */}
-              <div className="flex flex-col gap-1.5 lg:col-span-2">
-                <div className="flex justify-between items-center text-xs font-bold text-muted-foreground">
-                  <span>Budget Range</span>
-                  <span className="text-primary">{formatPriceReadable(budgetMin)} - {formatPriceReadable(budgetMax)}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Min Price"
-                    value={budgetMin}
-                    onChange={(e) => setBudgetMin(Number(e.target.value))}
-                    className="h-10 text-xs font-semibold rounded-xl"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max Price"
-                    value={budgetMax}
-                    onChange={(e) => setBudgetMax(Number(e.target.value))}
-                    className="h-10 text-xs font-semibold rounded-xl"
-                  />
+                  {BHK_OPTIONS.map((b) => {
+                    const isSelected = selectedBhk.includes(b);
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => toggleBhk(b)}
+                        className={`flex-1 h-9 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                            : 'bg-background border-border/80 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {b} BHK
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
             </div>
 
-            {/* 4. Preferred Cities */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-muted-foreground">Preferred Cities</label>
-              <div className="flex flex-wrap gap-2">
-                {CITY_OPTIONS.map(city => {
-                  const isSelected = selectedCities.includes(city);
-                  return (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => toggleCity(city)}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-primary/10 border-primary text-primary'
-                          : 'bg-background border-border/80 text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {isSelected && <Check className="h-3 w-3" />}
-                      <span>{city}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-border/30">
+            <div className="flex justify-end pt-2">
               <Button
                 type="submit"
-                className="h-10 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-xs px-6 flex items-center gap-2 cursor-pointer shadow-md"
+                disabled={!isAllowed || !recUsage.canUse || isLoading}
+                className="rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold px-6 h-10 text-xs flex items-center gap-2 cursor-pointer shadow-md"
               >
-                <Sparkles className="h-4 w-4" />
-                <span>Get AI Recommendations ✨</span>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>AI is thinking...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>Get AI Matches ✨</span>
+                  </>
+                )}
               </Button>
             </div>
           </form>
         )}
 
-        {/* Recommended Property Cards */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-80 rounded-2xl bg-muted/40 animate-pulse border border-border/40" />
-            ))}
+        {/* Loading Spinner State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+            <div className="p-3 rounded-full bg-primary/10 text-primary border border-primary/20 animate-pulse">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+            <span className="text-sm font-extrabold text-foreground animate-pulse">AI is thinking...</span>
+            <p className="text-xs text-muted-foreground">Matching property vector embeddings with your preferences</p>
           </div>
-        ) : recommendations.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommendations.map(prop => (
-              <div key={prop.id} className="flex flex-col gap-2">
-                {/* AI Reason Badge / Tooltip Header */}
-                <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-semibold text-primary flex items-start gap-2 shadow-xs">
-                  <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span className="leading-tight">
-                    <strong className="font-extrabold text-primary block text-[11px]">Why Recommended:</strong>
-                    {reasons[prop.id] || `Matches your ${prop.bedrooms} BHK requirement in ${prop.location.city}.`}
-                  </span>
-                </div>
+        )}
 
-                <PropertyCard property={prop} />
-              </div>
-            ))}
-          </div>
-        ) : !isFormOpen && (
-          <div className="text-center py-10 bg-card rounded-2xl border border-border/40 p-6">
-            <p className="text-xs text-muted-foreground font-bold">No property recommendations found matching your criteria.</p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsFormOpen(true)}
-              className="mt-3 rounded-xl border-primary/30 text-primary font-bold text-xs"
-            >
-              Refine Preferences
-            </Button>
+        {/* Recommendations Cards Grid */}
+        {!isLoading && recommendations.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+            {recommendations.map((property) => {
+              const aiReason = reasons[property.id] || `Matches your ${property.location.city} location & budget preferences`;
+              return (
+                <div key={property.id} className="flex flex-col gap-2 group">
+                  {/* AI Match Reason Banner */}
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-1.5 text-left flex items-start gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                    <span className="text-[11px] font-bold text-primary leading-tight">
+                      {aiReason}
+                    </span>
+                  </div>
+
+                  <PropertyCard property={property} />
+                </div>
+              );
+            })}
           </div>
         )}
 
