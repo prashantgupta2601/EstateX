@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { mockProperties } from '@/lib/mock-data/properties';
 import { getPropertyById } from '@/lib/mock-data/api-simulation';
+import { mapDbPropertyToUiProperty } from '@/lib/utils/property-mapper';
+import { Property } from '@/types/property';
 import PropertyDetailsClient from '@/components/property/property-details-client';
 import PropertyDetailsSkeleton from '@/components/skeletons/property-details-skeleton';
 
@@ -9,9 +11,30 @@ interface PropertyDetailsPageProps {
   params: Promise<{ id: string }>;
 }
 
+async function fetchRealProperty(id: string): Promise<Property | undefined> {
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/properties/${id}`, {
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const dbProp = await res.json();
+      if (dbProp && dbProp.id) {
+        return mapDbPropertyToUiProperty(dbProp);
+      }
+    }
+  } catch (err) {
+    console.warn(`[PropertyDetails] API fetch failed for ID ${id}, falling back to mock:`, err);
+  }
+
+  // Fallback to mock simulation data
+  return getPropertyById(id);
+}
+
 export async function generateMetadata({ params }: PropertyDetailsPageProps): Promise<Metadata> {
   const { id } = await params;
-  const property = mockProperties.find((p) => p.id === id);
+  const property = (await fetchRealProperty(id)) || mockProperties.find((p) => p.id === id);
   if (!property) return {};
 
   const bhk = property.bedrooms > 0 ? `${property.bedrooms} BHK ` : '';
@@ -39,7 +62,7 @@ export async function generateMetadata({ params }: PropertyDetailsPageProps): Pr
 
 export default async function PropertyDetailsPage({ params }: PropertyDetailsPageProps) {
   const { id } = await params;
-  const propertyPromise = getPropertyById(id);
+  const propertyPromise = fetchRealProperty(id);
 
   return (
     <div className="w-full min-h-screen bg-background flex flex-col">

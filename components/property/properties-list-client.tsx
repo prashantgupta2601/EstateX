@@ -2,8 +2,10 @@
 
 import React, { useState, useMemo, useCallback, use } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import { Property } from '@/types/property';
+import { mapDbPropertyToUiProperty } from '@/lib/utils/property-mapper';
 import PropertyCard from '@/components/property/property-card';
 import PropertyCardList from '@/components/property/property-card-list';
 import EmptyState from '@/components/property/empty-state';
@@ -145,6 +147,29 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Real Database Fetching with TanStack React Query
+  const searchParamsString = searchParams.toString();
+  const { data: apiData, isLoading: isApiLoading } = useQuery({
+    queryKey: ['properties', searchParamsString],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/properties?${searchParamsString}`);
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (err) {
+        console.warn('API fetch fallback to mock properties:', err);
+        return null;
+      }
+    },
+  });
+
+  const effectiveProperties = useMemo(() => {
+    if (apiData?.properties && Array.isArray(apiData.properties) && apiData.properties.length > 0) {
+      return apiData.properties.map(mapDbPropertyToUiProperty);
+    }
+    return properties;
+  }, [apiData, properties]);
 
   // Derive sortBy from URL parameter (e.g. ?sort=price_asc)
   const sortByParam = searchParams.get('sort');
@@ -398,7 +423,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
   // --- 3. Compute Live Filtered Properties ---
   const filteredProperties = useMemo(() => {
-    return properties.filter((property) => {
+    return effectiveProperties.filter((property: Property) => {
       // 1. Purpose filter (Buy vs Rent vs Commercial vs Any)
       if (filters.purpose && filters.purpose !== 'any') {
         if (filters.purpose === 'buy' && property.type !== 'sale') return false;
@@ -459,17 +484,18 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
       // 5. BHK (Bedrooms) filter
       if (filters.bhk.length > 0) {
-        const matches = filters.bhk.some((b) => {
-          if (b === '4+') return property.bedrooms >= 4;
-          return property.bedrooms === parseInt(b, 10);
+        const matchesBhk = filters.bhk.some((b) => {
+          const num = parseInt(b, 10);
+          if (num === 4) return property.bedrooms >= 4;
+          return property.bedrooms === num;
         });
-        if (!matches) return false;
+        if (!matchesBhk) return false;
       }
 
       // 6. Amenities filter (AND matching)
       if (filters.selectedAmenities.length > 0) {
         const hasAll = filters.selectedAmenities.every((fa) => {
-          return property.amenities.some((a) => {
+          return property.amenities.some((a: any) => {
             const name = a.name.toLowerCase();
             if (fa === 'parking') return name.includes('parking') || name.includes('garage') || name.includes('gated');
             if (fa === 'lift') return name.includes('lift') || name.includes('elevator');
@@ -543,7 +569,7 @@ export default function PropertiesListClient({ propertiesPromise }: PropertiesLi
 
       return true;
     });
-  }, [filters, properties]);
+  }, [filters, effectiveProperties]);
 
   // Sort the filtered properties
   const sortedProperties = useMemo(() => {
