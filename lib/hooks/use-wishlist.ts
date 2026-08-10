@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { toast } from '@/components/ui/toast';
 
 const WISHLIST_EVENT = 'estatehub_wishlist_change';
 
@@ -14,13 +16,30 @@ const getSavedWishlist = (): string[] => {
 };
 
 export function useWishlist() {
+  const { data: session, status } = useSession();
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const isAuthenticated = status === 'authenticated' && !!session?.user;
 
-  // Initialize on mount
+  // Fetch wishlist from API when authenticated, or sync with localStorage when guest
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let isMounted = true;
+
+    if (isAuthenticated) {
+      fetch('/api/wishlist')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (isMounted && data && Array.isArray(data.propertyIds)) {
+            setWishlist(data.propertyIds);
+            localStorage.setItem('estatehub_wishlist', JSON.stringify(data.propertyIds));
+          }
+        })
+        .catch((err) => {
+          console.warn('Wishlist API fetch fallback to local storage:', err);
+          if (isMounted) setWishlist(getSavedWishlist());
+        });
+    } else {
       setWishlist(getSavedWishlist());
-    }, 0);
+    }
 
     const handleSync = () => {
       setWishlist(getSavedWishlist());
@@ -28,14 +47,15 @@ export function useWishlist() {
 
     window.addEventListener(WISHLIST_EVENT, handleSync);
     window.addEventListener('storage', handleSync);
+
     return () => {
-      clearTimeout(timer);
+      isMounted = false;
       window.removeEventListener(WISHLIST_EVENT, handleSync);
       window.removeEventListener('storage', handleSync);
     };
-  }, []);
+  }, [isAuthenticated]);
 
-  const updateWishlist = useCallback((newWishlist: string[]) => {
+  const updateWishlistLocal = useCallback((newWishlist: string[]) => {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('estatehub_wishlist', JSON.stringify(newWishlist));
@@ -47,27 +67,64 @@ export function useWishlist() {
     }
   }, []);
 
-  const addToWishlist = useCallback((id: string) => {
-    const current = getSavedWishlist();
-    if (!current.includes(id)) {
-      updateWishlist([...current, id]);
-    }
-  }, [updateWishlist]);
+  const addToWishlist = useCallback(
+    async (id: string) => {
+      // Optimistic update
+      const current = wishlist.includes(id) ? wishlist : [...wishlist, id];
+      updateWishlistLocal(current);
 
-  const removeFromWishlist = useCallback((id: string) => {
-    const current = getSavedWishlist();
-    if (current.includes(id)) {
-      updateWishlist(current.filter((item) => item !== id));
-    }
-  }, [updateWishlist]);
+      if (isAuthenticated) {
+        try {
+          const res = await fetch('/api/wishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: id }),
+          });
+          if (res.ok) {
+            toast('Property added to your wishlist', 'success');
+          }
+        } catch (err) {
+          console.error('Failed to add to database wishlist:', err);
+        }
+      } else {
+        toast('Saved to wishlist. Log in to sync across devices!');
+      }
+    },
+    [wishlist, isAuthenticated, updateWishlistLocal]
+  );
 
-  const isInWishlist = useCallback((id: string) => {
-    return wishlist.includes(id);
-  }, [wishlist]);
+  const removeFromWishlist = useCallback(
+    async (id: string) => {
+      // Optimistic update
+      const current = wishlist.filter((item) => item !== id);
+      updateWishlistLocal(current);
+
+      if (isAuthenticated) {
+        try {
+          const res = await fetch(`/api/wishlist?propertyId=${id}`, {
+            method: 'DELETE',
+          });
+          if (res.ok) {
+            toast('Property removed from your wishlist');
+          }
+        } catch (err) {
+          console.error('Failed to remove from database wishlist:', err);
+        }
+      }
+    },
+    [wishlist, isAuthenticated, updateWishlistLocal]
+  );
+
+  const isInWishlist = useCallback(
+    (id: string) => {
+      return wishlist.includes(id);
+    },
+    [wishlist]
+  );
 
   const clearWishlist = useCallback(() => {
-    updateWishlist([]);
-  }, [updateWishlist]);
+    updateWishlistLocal([]);
+  }, [updateWishlistLocal]);
 
   return {
     wishlist,

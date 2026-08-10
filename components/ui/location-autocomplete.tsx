@@ -34,12 +34,28 @@ export default function LocationAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     onChange(val); // Fallback string search update
 
     if (val.trim().length >= 2) {
       const q = val.toLowerCase().trim();
+      try {
+        const res = await fetch(`/api/properties/search?q=${encodeURIComponent(val.trim())}`);
+        if (res.ok) {
+          const apiSuggestions = await res.json();
+          if (Array.isArray(apiSuggestions) && apiSuggestions.length > 0) {
+            setSuggestions(apiSuggestions.slice(0, 8));
+            setIsOpen(true);
+            setActiveIndex(-1);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Search API fallback to mockLocalities:', err);
+      }
+
+      // Fallback to mockLocalities if API empty or unavailable
       const filtered = mockLocalities.filter((item) => {
         const nameMatch = item.name.toLowerCase().includes(q);
         const cityMatch = item.city.toLowerCase().includes(q);
