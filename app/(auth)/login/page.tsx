@@ -1,25 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('from') || searchParams.get('callbackUrl') || '/dashboard';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
-    // 1. Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
       newErrors.email = 'Email address is required';
@@ -27,7 +32,6 @@ export default function LoginPage() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // 2. Password validation
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 8) {
@@ -38,13 +42,39 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Login attempt:', { email, password, rememberMe });
-      document.cookie = 'seller_session=true; path=/; max-age=86400';
-      toast('Login successful (mock)', 'success');
-      router.push('/dashboard');
+    setServerError(null);
+
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        if (res.error === 'CredentialsSignin') {
+          setServerError('Invalid email or password. Please check your credentials.');
+        } else {
+          setServerError(res.error);
+        }
+        toast(res.error === 'CredentialsSignin' ? 'Invalid credentials' : res.error, 'error');
+      } else if (res?.ok) {
+        toast('Login successful!', 'success');
+        router.push(callbackUrl);
+        router.refresh();
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setServerError('An unexpected error occurred. Please try again.');
+      toast('Login failed', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,6 +91,13 @@ export default function LoginPage() {
         </p>
       </div>
 
+      {serverError && (
+        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Email Field */}
         <div className="flex flex-col gap-1.5">
@@ -73,9 +110,11 @@ export default function LoginPage() {
               id="email"
               type="email"
               value={email}
+              disabled={isLoading}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (errors.email) setErrors({ ...errors, email: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="name@example.com"
               className={`pl-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -110,9 +149,11 @@ export default function LoginPage() {
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
+              disabled={isLoading}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (errors.password) setErrors({ ...errors, password: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="••••••••"
               className={`pl-10 pr-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -141,6 +182,7 @@ export default function LoginPage() {
             id="rememberMe"
             type="checkbox"
             checked={rememberMe}
+            disabled={isLoading}
             onChange={(e) => setRememberMe(e.target.checked)}
             className="h-4 w-4 rounded-md border-border bg-background/50 text-primary focus:ring-primary/20 accent-primary cursor-pointer"
           />
@@ -152,9 +194,17 @@ export default function LoginPage() {
         {/* Submit button */}
         <Button 
           type="submit" 
-          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-2 text-sm"
+          disabled={isLoading}
+          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-2 text-sm flex items-center justify-center gap-2"
         >
-          Sign In
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Signing In...</span>
+            </>
+          ) : (
+            <span>Sign In</span>
+          )}
         </Button>
       </form>
 
@@ -202,5 +252,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

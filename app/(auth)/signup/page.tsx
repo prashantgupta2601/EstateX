@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Phone, Lock, Home, Building2, AlertCircle } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { User, Mail, Phone, Lock, Home, Building2, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
@@ -19,6 +20,8 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   
   const [errors, setErrors] = useState<{
     fullName?: string;
@@ -32,12 +35,10 @@ export default function SignupPage() {
   const validateForm = () => {
     const newErrors: typeof errors = {};
 
-    // 1. Full name
     if (!fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
 
-    // 2. Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
       newErrors.email = 'Email address is required';
@@ -45,7 +46,6 @@ export default function SignupPage() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // 3. Phone validation (10 digits)
     const phoneRegex = /^[0-9]{10}$/;
     if (!phone) {
       newErrors.phone = 'Phone number is required';
@@ -53,21 +53,18 @@ export default function SignupPage() {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
 
-    // 4. Password validation
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters long';
     }
 
-    // 5. Confirm password
     if (!confirmPassword) {
       newErrors.confirmPassword = 'Confirm password is required';
     } else if (confirmPassword !== password) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // 6. Agree to terms
     if (!agreeTerms) {
       newErrors.agreeTerms = 'You must agree to the terms and conditions';
     }
@@ -76,13 +73,60 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Signup form submitted:', { role, fullName, email, phone, password });
-      toast('Verification OTP sent (mock)');
-      // Redirect to OTP verification
-      router.push('/verify-otp');
+    setServerError(null);
+
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+
+    try {
+      // 1. Call registration API endpoint
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fullName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          password,
+          role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setServerError(data.error || 'Failed to create account');
+        toast(data.error || 'Registration failed', 'error');
+        setIsLoading(false);
+        return;
+      }
+
+      toast('Account created successfully!', 'success');
+
+      // 2. Auto-login using NextAuth signIn
+      const loginRes = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (loginRes?.ok) {
+        toast('Logged in successfully', 'success');
+        const targetUrl = role === 'seller' ? '/seller/dashboard' : '/buyer/dashboard';
+        router.push(targetUrl);
+        router.refresh();
+      } else {
+        router.push('/login');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setServerError('An unexpected error occurred. Please try again.');
+      toast('Registration failed', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,6 +139,13 @@ export default function SignupPage() {
         </p>
       </div>
 
+      {serverError && (
+        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{serverError}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         
         {/* Role Selector */}
@@ -105,7 +156,7 @@ export default function SignupPage() {
           <div className="grid grid-cols-2 gap-3">
             {/* Buyer Card */}
             <div
-              onClick={() => setRole('buyer')}
+              onClick={() => !isLoading && setRole('buyer')}
               className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center cursor-pointer select-none transition-all duration-300 ${
                 role === 'buyer'
                   ? 'border-primary bg-primary/5 text-primary scale-[1.02] shadow-xs'
@@ -119,7 +170,7 @@ export default function SignupPage() {
             
             {/* Seller Card */}
             <div
-              onClick={() => setRole('seller')}
+              onClick={() => !isLoading && setRole('seller')}
               className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center cursor-pointer select-none transition-all duration-300 ${
                 role === 'seller'
                   ? 'border-primary bg-primary/5 text-primary scale-[1.02] shadow-xs'
@@ -144,9 +195,11 @@ export default function SignupPage() {
               id="fullName"
               type="text"
               value={fullName}
+              disabled={isLoading}
               onChange={(e) => {
                 setFullName(e.target.value);
                 if (errors.fullName) setErrors({ ...errors, fullName: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="John Doe"
               className={`pl-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -173,9 +226,11 @@ export default function SignupPage() {
               id="email"
               type="email"
               value={email}
+              disabled={isLoading}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (errors.email) setErrors({ ...errors, email: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="name@example.com"
               className={`pl-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -205,10 +260,12 @@ export default function SignupPage() {
               id="phone"
               type="tel"
               value={phone}
+              disabled={isLoading}
               onChange={(e) => {
                 const cleaned = e.target.value.replace(/[^0-9]/g, '');
                 setPhone(cleaned.slice(0, 10));
                 if (errors.phone) setErrors({ ...errors, phone: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="98765 43210"
               className={`flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-11 rounded-none bg-transparent`}
@@ -233,9 +290,11 @@ export default function SignupPage() {
               id="password"
               type="password"
               value={password}
+              disabled={isLoading}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (errors.password) setErrors({ ...errors, password: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="•••••••• (min 8 chars)"
               className={`pl-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -262,9 +321,11 @@ export default function SignupPage() {
               id="confirmPassword"
               type="password"
               value={confirmPassword}
+              disabled={isLoading}
               onChange={(e) => {
                 setConfirmPassword(e.target.value);
                 if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
+                if (serverError) setServerError(null);
               }}
               placeholder="••••••••"
               className={`pl-10 h-11 rounded-xl bg-background/50 focus-visible:bg-background ${
@@ -287,6 +348,7 @@ export default function SignupPage() {
               id="agreeTerms"
               type="checkbox"
               checked={agreeTerms}
+              disabled={isLoading}
               onChange={(e) => {
                 setAgreeTerms(e.target.checked);
                 if (errors.agreeTerms) setErrors({ ...errors, agreeTerms: undefined });
@@ -315,9 +377,17 @@ export default function SignupPage() {
         {/* Submit */}
         <Button 
           type="submit" 
-          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-2 text-sm"
+          disabled={isLoading}
+          className="h-11 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold shadow-md cursor-pointer mt-2 text-sm flex items-center justify-center gap-2"
         >
-          Create Account
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Creating Account...</span>
+            </>
+          ) : (
+            <span>Create Account</span>
+          )}
         </Button>
       </form>
 
