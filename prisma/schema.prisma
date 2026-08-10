@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  HOUSE
+  PLOT
+  OFFICE
+  SHOP
+  WAREHOUSE
+}
+
+enum ListingType {
+  SALE
+  RENT
+  COMMERCIAL
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAUSED
+  EXPIRED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  NOT_INTERESTED
+  CONVERTED
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PRO
+}
+
+enum KYCStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id               String         @id @default(cuid())
+  name             String
+  email            String         @unique
+  emailVerified    DateTime?
+  phone            String?        @unique
+  phoneVerified    Boolean        @default(false)
+  password         String?
+  avatar           String?
+  role             Role           @default(BUYER)
+  isActive         Boolean        @default(true)
+  isBanned         Boolean        @default(false)
+  banReason        String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  properties       Property[]
+  wishlist         Wishlist[]
+  leads            Lead[]         @relation("BuyerLeads")
+  receivedLeads    Lead[]         @relation("SellerLeads")
+  subscription     Subscription?
+  reviews          Review[]
+  notifications    Notification[]
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  kycSubmission    KYCSubmission?
+  savedSearches    SavedSearch[]
+}
+
+model Property {
+  id            String            @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  type          ListingType
+  propertyType  PropertyType
+  bhk           Int?
+  area          Float
+  carpetArea    Float?
+  floor         Int?
+  totalFloors   Int?
+  furnishing    String?
+  facing        String?
+  propertyAge   String?
+  parking       Int               @default(0)
+  status        ListingStatus     @default(PENDING)
+  isVerified    Boolean           @default(false)
+  isFeatured    Boolean           @default(false)
+  views         Int               @default(0)
+  lat           Float?
+  lng           Float?
+  address       String?
+  locality      String
+  city          String
+  pincode       String?
+  availableFrom DateTime?
+  expiresAt     DateTime?
+  sellerId      String
+  seller        User              @relation(fields: [sellerId], references: [id])
+  images        PropertyImage[]
+  videos        PropertyVideo[]
+  amenities     PropertyAmenity[]
+  leads         Lead[]
+  reviews       Review[]
+  wishlistedBy  Wishlist[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  url        String
+  publicId   String?
+  isMain     Boolean  @default(false)
+  order      Int      @default(0)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model PropertyVideo {
+  id         String   @id @default(cuid())
+  url        String
+  publicId   String?
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model PropertyAmenity {
+  id         String   @id @default(cuid())
+  name       String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  message    String?
+  status     LeadStatus @default(NEW)
+  source     String     @default("website")
+  buyerId    String
+  sellerId   String
+  propertyId String
+  buyer      User       @relation("BuyerLeads", fields: [buyerId], references: [id])
+  seller     User       @relation("SellerLeads", fields: [sellerId], references: [id])
+  property   Property   @relation(fields: [propertyId], references: [id])
+  notes      LeadNote[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  content   String
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id        String           @id @default(cuid())
+  plan      SubscriptionPlan @default(FREE)
+  startDate DateTime         @default(now())
+  endDate   DateTime?
+  isActive  Boolean          @default(true)
+  autoRenew Boolean          @default(true)
+  userId    String           @unique
+  user      User             @relation(fields: [userId], references: [id])
+  payments  Payment[]
+}
+
+model Payment {
+  id                String       @id @default(cuid())
+  amount            Float
+  currency          String       @default("INR")
+  status            String
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  subscriptionId    String
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id])
+  createdAt         DateTime     @default(now())
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  userId     String
+  propertyId String
+  user       User     @relation(fields: [userId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  isRead     Boolean  @default(false)
+  senderId   String
+  receiverId String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  name      String
+  filters   Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model KYCSubmission {
+  id              String    @id @default(cuid())
+  documentType    String
+  frontImageUrl   String
+  backImageUrl    String?
+  reraNumber      String?
+  status          KYCStatus @default(PENDING)
+  rejectionReason String?
+  reviewedAt      DateTime?
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  createdAt       DateTime  @default(now())
+}
+
+model Report {
+  id               String    @id @default(cuid())
+  reportedItemType String
+  reportedItemId   String
+  reason           String
+  description      String?
+  status           String    @default("open")
+  reporterEmail    String
+  resolvedAt       DateTime?
+  actionTaken      String?
+  createdAt        DateTime  @default(now())
+}
