@@ -4,6 +4,7 @@ import FeaturedProperties from '@/components/home/featured-properties';
 import AiRecommendations from '@/components/home/ai-recommendations';
 import PopularCities from '@/components/home/popular-cities';
 import TrustSection from '@/components/home/trust-section';
+import CityPropertyLinks from '@/components/home/city-property-links';
 
 export default function HomePage() {
   return (
@@ -22,6 +23,10 @@ export default function HomePage() {
 
       {/* Trust & Stats Section */}
       <TrustSection />
+
+      {/* Property Options in Top Cities Section */}
+      <CityPropertyLinks />
     </div>
   );
 }
+

@@ -1,3 +1,3 @@
-import AdminSubscriptionPlansPage from '@/app/(admin)/plans/page';
+import AdminSubscriptionPlansPage from '@/app/admin/plans/page';
 
 export default AdminSubscriptionPlansPage;

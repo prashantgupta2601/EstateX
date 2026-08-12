@@ -115,7 +115,7 @@ export default function SignupPage() {
 
       if (loginRes?.ok) {
         toast('Logged in successfully', 'success');
-        const targetUrl = role === 'seller' ? '/seller/dashboard' : '/buyer/dashboard';
+        const targetUrl = role === 'seller' ? '/seller/dashboard' : '/dashboard';
         router.push(targetUrl);
         router.refresh();
       } else {

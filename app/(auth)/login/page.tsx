@@ -66,7 +66,20 @@ function LoginForm() {
         toast(res.error === 'CredentialsSignin' ? 'Invalid credentials' : res.error, 'error');
       } else if (res?.ok) {
         toast('Login successful!', 'success');
-        router.push(callbackUrl);
+        
+        // Fetch session to determine role-based default redirect
+        const { getSession } = await import('next-auth/react');
+        const session = await getSession();
+        const role = (session?.user as any)?.role;
+
+        let targetUrl = callbackUrl;
+        if (callbackUrl === '/dashboard' || !callbackUrl) {
+          if (role === 'ADMIN') targetUrl = '/admin/dashboard';
+          else if (role === 'SELLER') targetUrl = '/seller/dashboard';
+          else targetUrl = '/dashboard';
+        }
+
+        router.push(targetUrl);
         router.refresh();
       }
     } catch (err: any) {
