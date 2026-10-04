@@ -71,8 +71,6 @@ export default function AiChatWidget() {
     const queryText = (textToSend || input).trim();
     if (!queryText || isStreaming || !isAllowed || !chatUsage.canUse) return;
 
-    chatUsage.increment();
-
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -107,6 +105,7 @@ export default function AiChatWidget() {
         throw new Error('Failed to start AI chat stream');
       }
 
+      chatUsage.increment();
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let accumulatedText = '';

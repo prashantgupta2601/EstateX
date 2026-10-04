@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { geminiFlash, generateText } from '@/lib/ai/gemini-client';
+import { generateText } from '@/lib/ai/gemini-client';
+import { getGeminiModel, GEMINI_MODEL } from '@/lib/gemini';
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,8 +49,10 @@ Respond ONLY in this exact JSON format:
     let responseText = '';
     try {
       responseText = await generateText(prompt, 20000);
-    } catch (err) {
-      const result = await geminiFlash.generateContent(prompt);
+    } catch (innerErr: unknown) {
+      // generateText already logged; try a direct call as last resort
+      const model = getGeminiModel();
+      const result = await model.generateContent(prompt);
       const res = await result.response;
       responseText = res.text();
     }
@@ -69,10 +72,13 @@ Respond ONLY in this exact JSON format:
     const parsedData = JSON.parse(cleanJsonStr);
 
     return NextResponse.json(parsedData);
-  } catch (error: any) {
-    console.error('Error in predict-price API:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const status = (error as any)?.status ?? (error as any)?.statusCode ?? 500;
+    // Log the REAL error details (status + message) — never the API key
+    console.error(`[predict-price] Error | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}`);
     return NextResponse.json(
-      { error: error?.message || 'Failed to generate property price prediction' },
+      { error: 'AI temporarily unavailable. Please try again.' },
       { status: 500 }
     );
   }

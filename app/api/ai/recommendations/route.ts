@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { geminiFlash, generateText } from '@/lib/ai/gemini-client';
+import { generateText } from '@/lib/ai/gemini-client';
+import { getGeminiModel, GEMINI_MODEL } from '@/lib/gemini';
 import { mockProperties } from '@/lib/mock-data/properties';
 
 export async function POST(req: NextRequest) {
@@ -60,7 +61,8 @@ Return ONLY a JSON object of recommended property IDs in order of relevance (max
     try {
       responseText = await generateText(prompt, 20000);
     } catch (err) {
-      const result = await geminiFlash.generateContent(prompt);
+      const model = getGeminiModel();
+      const result = await model.generateContent(prompt);
       const res = await result.response;
       responseText = res.text();
     }
@@ -83,7 +85,9 @@ Return ONLY a JSON object of recommended property IDs in order of relevance (max
       reasons: parsedData.reasons || {},
     });
   } catch (error: any) {
-    console.error('Error in AI recommendations endpoint:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const status = error?.status ?? error?.statusCode ?? 500;
+    console.error(`[recommendations] Error | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}`);
 
     // Smart fallback if AI request fails
     const fallbackIds = mockProperties.slice(0, 6).map((p) => p.id);

@@ -192,7 +192,6 @@ export default function StepPhotos({
     );
 
     try {
-      visionUsage.increment();
       const { imageBase64, mimeType } = await urlToBase64(file.url);
       const res = await fetch('/api/ai/analyze-image', {
         method: 'POST',
@@ -205,6 +204,7 @@ export default function StepPhotos({
       }
 
       const data: ImageAnalysis = await res.json();
+      visionUsage.increment();
 
       setImageFiles(prev =>
         prev.map(f => (f.id === file.id ? { ...f, analysis: data, isAnalyzing: false } : f))

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { geminiFlash } from '@/lib/ai/gemini-client';
+import { getGeminiModel, GEMINI_MODEL } from '@/lib/gemini';
 
 // Fallback quality analyzer when API key is missing or request fails
 function generateFallbackAnalysis(imageBase64: string) {
@@ -89,13 +89,14 @@ Score based on:
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-      console.warn("GEMINI_API_KEY is missing or default placeholder. Using intelligent fallback evaluator.");
+      console.warn("[analyze-image] GEMINI_API_KEY is missing or default placeholder. Using intelligent fallback evaluator.");
       const fallbackResult = generateFallbackAnalysis(imageBase64);
       return NextResponse.json(fallbackResult);
     }
 
     try {
-      const result = await geminiFlash.generateContent([
+      const model = getGeminiModel();
+      const result = await model.generateContent([
         {
           inlineData: {
             data: imageBase64,
@@ -107,8 +108,10 @@ Score based on:
 
       const response = await result.response;
       rawText = response.text();
-    } catch (geminiErr: any) {
-      console.warn("Gemini Vision API call failed, switching to fallback quality evaluator:", geminiErr?.message || geminiErr);
+    } catch (geminiErr: unknown) {
+      const errMsg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      const status = (geminiErr as any)?.status ?? (geminiErr as any)?.statusCode ?? 'unknown';
+      console.warn(`[analyze-image] Gemini Vision API call failed | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}. Switching to fallback quality evaluator.`);
       const fallbackResult = generateFallbackAnalysis(imageBase64);
       return NextResponse.json(fallbackResult);
     }
@@ -141,10 +144,12 @@ Score based on:
       isAcceptable: typeof parsed.isAcceptable === 'boolean' ? parsed.isAcceptable : score >= 5,
       category
     });
-  } catch (error: any) {
-    console.error("Error in analyze-image API route:", error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const status = (error as any)?.status ?? (error as any)?.statusCode ?? 500;
+    console.error(`[analyze-image] Error | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}`);
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze image quality.' },
+      { error: 'AI temporarily unavailable. Please try again.' },
       { status: 500 }
     );
   }

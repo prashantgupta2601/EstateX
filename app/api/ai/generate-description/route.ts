@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { geminiFlash, generateText } from '@/lib/ai/gemini-client';
+import { generateText } from '@/lib/ai/gemini-client';
+import { getGeminiModel, GEMINI_MODEL } from '@/lib/gemini';
 
 // Simple in-memory rate limiter: max 10 requests / minute
 const requestTimestamps: number[] = [];
@@ -65,20 +66,23 @@ Write the description in English, professional tone:`;
     let descriptionText = '';
 
     try {
-      // Use our geminiFlash instance / generateText helper with timeout & error handling
       descriptionText = await generateText(prompt, 15000);
-    } catch (genError) {
-      // Fallback direct call to geminiFlash.generateContent if generateText fails on env check
-      const result = await geminiFlash.generateContent(prompt);
+    } catch (genError: unknown) {
+      // Fallback direct call if generateText fails
+      const model = getGeminiModel();
+      const result = await model.generateContent(prompt);
       const response = await result.response;
       descriptionText = response.text();
     }
 
     return NextResponse.json({ description: descriptionText.trim() });
-  } catch (error: any) {
-    console.error('Error generating AI description:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const status = (error as any)?.status ?? (error as any)?.statusCode ?? 500;
+    // Log REAL error details — never the API key
+    console.error(`[generate-description] Error | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}`);
     return NextResponse.json(
-      { error: error?.message || 'Failed to generate property description' },
+      { error: 'AI temporarily unavailable. Please try again.' },
       { status: 500 }
     );
   }

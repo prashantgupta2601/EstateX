@@ -144,7 +144,6 @@ export default function PricePredictor({
     setIsLoading(true);
     setPredictionError(false);
     try {
-      priceUsage.increment();
       const response = await fetch('/api/ai/predict-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -157,6 +156,7 @@ export default function PricePredictor({
         throw new Error(data.error || 'AI temporarily unavailable. Please try again.');
       }
 
+      priceUsage.increment();
       setPrediction(data);
       toast('Price prediction generated successfully using Gemini AI! ✨', 'success');
     } catch (error: unknown) {

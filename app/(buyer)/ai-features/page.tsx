@@ -61,7 +61,6 @@ export default function AIFeaturesPage() {
     setPredictedResult(null);
 
     try {
-      priceUsage.increment();
       const res = await fetch('/api/ai/predict-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,6 +74,7 @@ export default function AIFeaturesPage() {
 
       if (!res.ok) throw new Error('Prediction API failed');
       const data = await res.json();
+      priceUsage.increment();
       setPredictedResult(`₹${(data.estimatedPrice / 100000).toFixed(2)} Lakhs (${data.confidence || '92%'} confidence)`);
       toast('Price estimated using Gemini AI!', 'success');
     } catch {
@@ -93,7 +93,6 @@ export default function AIFeaturesPage() {
     setRecResults(null);
 
     try {
-      recUsage.increment();
       const res = await fetch('/api/ai/recommendations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,6 +102,7 @@ export default function AIFeaturesPage() {
       });
 
       if (!res.ok) throw new Error('Recommendation API failed');
+      recUsage.increment();
       setRecResults([
         '3 BHK Luxury Apartment in Golf Course Extension Road (96% Match)',
         '2 BHK High-rise Condo near DLF Cyber City (91% Match)',

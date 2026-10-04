@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { geminiFlash } from '@/lib/ai/gemini-client';
+import { getGeminiModel, GEMINI_MODEL } from '@/lib/gemini';
 
 const SYSTEM_PROMPT = `You are EstateHub's friendly AI assistant helping users find their perfect property in India. You help with:
 - Property search guidance
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
 
     fullPrompt += `Assistant:`;
 
-    const streamResult = await geminiFlash.generateContentStream(fullPrompt);
+    const model = getGeminiModel();
+    const streamResult = await model.generateContentStream(fullPrompt);
 
     const encoder = new TextEncoder();
     const customStream = new ReadableStream({
@@ -51,8 +52,9 @@ export async function POST(req: NextRequest) {
             }
           }
           controller.close();
-        } catch (err) {
-          console.error('Error streaming Gemini response:', err);
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.error(`[chat] Stream error | model="${GEMINI_MODEL}":`, errMsg);
           controller.error(err);
         }
       },
@@ -65,10 +67,12 @@ export async function POST(req: NextRequest) {
         'Cache-Control': 'no-cache',
       },
     });
-  } catch (error: any) {
-    console.error('Error in chat API route:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const status = (error as any)?.status ?? (error as any)?.statusCode ?? 500;
+    console.error(`[chat] Error | model="${GEMINI_MODEL}" | status=${status} | message=${errMsg}`);
     return new Response(
-      JSON.stringify({ error: error?.message || 'Failed to process chat request' }),
+      JSON.stringify({ error: 'AI temporarily unavailable. Please try again.' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

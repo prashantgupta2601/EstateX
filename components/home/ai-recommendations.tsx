@@ -80,7 +80,6 @@ export default function AiRecommendations() {
     setIsLoading(true);
     setHasError(false);
     try {
-      recUsage.increment();
       const response = await fetch('/api/ai/recommendations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,6 +103,7 @@ export default function AiRecommendations() {
       }
 
       const data = await response.json();
+      recUsage.increment();
       const recIds: string[] = data.recommendedIds || [];
       const recReasons: Record<string, string> = data.reasons || {};
 
